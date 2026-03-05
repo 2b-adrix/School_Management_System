@@ -1,0 +1,12 @@
+package com.example.schoolmanagementsystem.domain.repository
+
+import com.example.schoolmanagementsystem.domain.model.TimetableEntry
+import com.example.schoolmanagementsystem.domain.util.Resource
+import kotlinx.coroutines.flow.Flow
+
+interface TimetableRepository {
+    fun getTimetableForClass(classId: String): Flow<Resource<List<TimetableEntry>>>
+    suspend fun addTimetableEntry(entry: TimetableEntry): Resource<Unit>
+    suspend fun updateTimetableEntry(entry: TimetableEntry): Resource<Unit>
+    suspend fun deleteTimetableEntry(id: String): Resource<Unit>
+}
