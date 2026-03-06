@@ -16,6 +16,7 @@ fun AddExamScreen(
     viewModel: AddExamViewModel = hiltViewModel()
 ) {
     var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var subjectId by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
     var totalMarks by remember { mutableStateOf("100") }
@@ -59,6 +60,12 @@ fun AddExamScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
                 value = subjectId,
                 onValueChange = { subjectId = it },
                 label = { Text("Subject ID *") },
@@ -78,7 +85,7 @@ fun AddExamScreen(
             )
 
             Button(
-                onClick = { viewModel.saveExam(title, subjectId, date, totalMarks) },
+                onClick = { viewModel.saveExam(title, description, subjectId, date, totalMarks) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = saveState !is Resource.Loading
             ) {

@@ -38,6 +38,32 @@ class ExamRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateExam(exam: Exam): Resource<Unit> {
+        return try {
+            postgrest["exams"].update(exam) {
+                filter {
+                    eq("id", exam.id)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update exam")
+        }
+    }
+
+    override suspend fun deleteExam(exam: Exam): Resource<Unit> {
+        return try {
+            postgrest["exams"].delete {
+                filter {
+                    eq("id", exam.id)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete exam")
+        }
+    }
+
     override fun getResultsByExam(examId: String): Flow<Resource<List<Result>>> = flow {
         emit(Resource.Loading())
         try {

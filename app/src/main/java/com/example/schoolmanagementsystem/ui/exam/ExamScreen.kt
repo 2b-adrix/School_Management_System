@@ -1,6 +1,5 @@
 package com.example.schoolmanagementsystem.ui.exam
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,10 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.*
@@ -26,11 +23,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.domain.model.Exam
 import com.example.schoolmanagementsystem.domain.model.Subject
 import com.example.schoolmanagementsystem.domain.model.UserRole
+import com.example.schoolmanagementsystem.domain.util.Resource
 import com.example.schoolmanagementsystem.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
-import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
-import com.example.schoolmanagementsystem.ui.dashboard.DashboardBottomNavigation
-import com.example.schoolmanagementsystem.ui.navigation.Screen
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -38,8 +33,8 @@ import java.util.Locale
 @Composable
 fun ExamScreen(
     onNavigateBack: () -> Unit,
-    onAddExamClick: (String) -> Unit, // Pass classId to AddExamScreen
-    onMarkEntryClick: (String) -> Unit, // Pass examId to MarkEntryScreen
+    onAddExamClick: (String) -> Unit,
+    onMarkEntryClick: (String) -> Unit,
     viewModel: ExamViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -61,15 +56,8 @@ fun ExamScreen(
                             Icon(Icons.Rounded.FilterList, contentDescription = "Filter", tint = Color.White)
                         }
                         IconButton(onClick = {
-                            // Navigate to AddExamScreen, passing selected classId if available
-                            // For now, we navigate to a placeholder or handle class selection here
-                            // For simplicity, assume classId is known or handled in a separate selection step before this screen
-                            // If we are in ExamListScreen, we might have classId. Here, we need a way to get it.
-                            // Let's assume we get it from the navigation argument if this screen is ExamListScreen
-                            // For now, let's pass a dummy value or handle class selection later.
-                            // onAddExamClick("dummy_class_id") // Placeholder
-                        })
-                        {
+                            // Navigation logic for adding exam
+                        }) {
                             Icon(Icons.Default.Add, contentDescription = "Add Exam", tint = Color.White)
                         }
                     }
@@ -91,12 +79,12 @@ fun ExamScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(exams, key = { it.id }) {
+                            items(exams, key = { it.id }) { exam ->
                                 ExamItemCard(
-                                    exam = it,
+                                    exam = exam,
                                     subjects = state.subjects.data ?: emptyList(),
                                     onExamClick = { examId -> onMarkEntryClick(examId) },
-                                    onDeleteClick = { exam -> viewModel.deleteExam(exam) },
+                                    onDeleteClick = { viewModel.deleteExam(it) },
                                     isTeacherOrAdmin = state.user?.role == UserRole.TEACHER || state.user?.role == UserRole.ADMIN
                                 )
                             }
@@ -105,7 +93,7 @@ fun ExamScreen(
                 }
                 is Resource.Error -> ErrorScreen(
                     message = result.message ?: "An error occurred",
-                    onRetry = { /* Handle retry, perhaps reload exams */ }
+                    onRetry = { viewModel.getExamsByClass("") } // Adjust with actual classId if available
                 )
             }
         }
@@ -129,7 +117,7 @@ fun ExamItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                if (isTeacherOrAdmin) onExamClick(exam.id) // Allow click for mark entry if teacher/admin
+                if (isTeacherOrAdmin) onExamClick(exam.id)
             },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),

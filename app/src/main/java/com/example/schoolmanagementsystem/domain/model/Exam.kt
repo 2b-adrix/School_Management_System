@@ -9,5 +9,6 @@ data class Exam(
     val subjectId: String,
     val classId: String,
     val date: Date,
-    val createdBy: String // Teacher ID
+    val totalMarks: Int,
+    val createdBy: String
 )

@@ -1,6 +1,5 @@
 package com.example.schoolmanagementsystem.ui.assignment
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.schoolmanagementsystem.domain.model.Assignment
+import com.example.schoolmanagementsystem.domain.util.Resource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,22 +49,44 @@ fun AssignmentScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(state.assignments) { assignment ->
-                AssignmentItemCard(assignment)
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+            when (val assignmentsResource = state.assignments) {
+                is Resource.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is Resource.Error -> {
+                    Text(
+                        text = assignmentsResource.message ?: "Unknown error",
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                is Resource.Success -> {
+                    val assignments = assignmentsResource.data ?: emptyList()
+                    if (assignments.isEmpty()) {
+                        Text(
+                            text = "No assignments found",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(assignments) { assignment ->
+                                AssignmentItemCard(assignment)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun AssignmentItemCard(assignment: AssignmentViewModel.AssignmentItem) {
+fun AssignmentItemCard(assignment: Assignment) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -105,7 +128,7 @@ fun AssignmentItemCard(assignment: AssignmentViewModel.AssignmentItem) {
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFA000))
                     ) {
                         Text(
-                            text = assignment.status,
+                            text = assignment.status ?: "",
                             color = Color(0xFFFFA000),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,

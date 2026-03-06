@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.exam
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Exam
+import com.example.schoolmanagementsystem.domain.model.User
 import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.ExamRepository

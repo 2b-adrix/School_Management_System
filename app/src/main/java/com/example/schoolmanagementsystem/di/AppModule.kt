@@ -76,6 +76,12 @@ abstract class AppModule {
 
     @Binds
     @Singleton
+    abstract fun bindAssignmentRepository(
+        assignmentRepositoryImpl: AssignmentRepositoryImpl
+    ): AssignmentRepository
+
+    @Binds
+    @Singleton
     abstract fun bindPdfService(
         pdfServiceImpl: PdfServiceImpl
     ): PdfService
