@@ -1,5 +1,6 @@
 package com.example.schoolmanagementsystem.ui.schoolclass
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +24,7 @@ import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
 @Composable
 fun ClassListScreen(
     onAddClassClick: () -> Unit,
+    onClassClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: ClassListViewModel = hiltViewModel()
 ) {
@@ -58,7 +60,10 @@ fun ClassListScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(classes) { schoolClass ->
-                                ClassItem(schoolClass = schoolClass)
+                                ClassItem(
+                                    schoolClass = schoolClass,
+                                    onClick = { onClassClick(schoolClass.id) }
+                                )
                             }
                         }
                     }
@@ -73,9 +78,14 @@ fun ClassListScreen(
 }
 
 @Composable
-fun ClassItem(schoolClass: SchoolClass) {
+fun ClassItem(
+    schoolClass: SchoolClass,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = "Class: ${schoolClass.name}", style = MaterialTheme.typography.titleLarge)

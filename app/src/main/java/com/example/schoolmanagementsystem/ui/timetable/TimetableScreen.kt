@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.schoolmanagementsystem.domain.model.TimetableEntry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +91,7 @@ fun TimetableScreen(
 }
 
 @Composable
-fun TimetableEntryCard(entry: TimetableViewModel.TimetableEntry) {
+fun TimetableEntryCard(entry: TimetableEntry) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(4.dp),
@@ -100,19 +101,19 @@ fun TimetableEntryCard(entry: TimetableViewModel.TimetableEntry) {
         Column {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = entry.subject, 
+                    text = "Subject: ${entry.subjectId}", 
                     fontWeight = FontWeight.Bold, 
                     fontSize = 16.sp,
-                    color = if (entry.isBreak) Color(0xFFC2185B) else Color.Black
+                    color = Color.Black
                 )
-                if (entry.teacher.isNotEmpty()) {
+                if (entry.teacherId.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = entry.teacher, color = Color.Gray, fontSize = 14.sp)
+                    Text(text = "Teacher: ${entry.teacherId}", color = Color.Gray, fontSize = 14.sp)
                 }
             }
             HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
             Box(modifier = Modifier.padding(16.dp)) {
-                Text(text = entry.time, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(text = "${entry.startTime} - ${entry.endTime}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
     }

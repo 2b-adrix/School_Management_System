@@ -60,11 +60,12 @@ fun TimetableListScreen(
                             val groupedEntries = entries.groupBy { it.dayOfWeek }
                             val days = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
                             
-                            days.forEach { day ->
-                                groupedEntries[day]?.let { dayEntries ->
+                            days.forEachIndexed { index, dayName ->
+                                val dayIndex = index // 0 = Monday, etc.
+                                groupedEntries[dayIndex]?.let { dayEntries ->
                                     item {
                                         Text(
-                                            text = day,
+                                            text = dayName,
                                             style = MaterialTheme.typography.titleMedium,
                                             modifier = Modifier.padding(vertical = 8.dp)
                                         )

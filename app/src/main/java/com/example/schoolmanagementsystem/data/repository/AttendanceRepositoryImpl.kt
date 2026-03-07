@@ -1,23 +1,28 @@
 package com.example.schoolmanagementsystem.data.repository
 
+import com.example.schoolmanagementsystem.data.manager.SessionManager
 import com.example.schoolmanagementsystem.domain.model.AttendanceRecord
 import com.example.schoolmanagementsystem.domain.repository.AttendanceRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class AttendanceRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest
+    private val postgrest: Postgrest,
+    private val sessionManager: SessionManager
 ) : AttendanceRepository {
 
     override fun getAttendanceForClassSubject(classId: String, subjectId: String, date: String): Flow<Resource<List<AttendanceRecord>>> = flow {
         emit(Resource.Loading())
         try {
+            val schoolId = sessionManager.schoolId.firstOrNull()
             val attendance = postgrest["attendance"]
                 .select {
                     filter {
+                        eq("schoolId", schoolId ?: "")
                         eq("classId", classId)
                         eq("subjectId", subjectId)
                         eq("date", date)
@@ -32,7 +37,9 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun saveAttendance(records: List<AttendanceRecord>): Resource<Unit> {
         return try {
-            postgrest["attendance"].upsert(records)
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            val recordsWithSchoolId = records.map { it.copy(schoolId = schoolId) }
+            postgrest["attendance"].upsert(recordsWithSchoolId)
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to save attendance")
@@ -42,9 +49,11 @@ class AttendanceRepositoryImpl @Inject constructor(
     override fun getAttendanceForStudent(studentId: String): Flow<Resource<List<AttendanceRecord>>> = flow {
         emit(Resource.Loading())
         try {
+            val schoolId = sessionManager.schoolId.firstOrNull()
             val attendance = postgrest["attendance"]
                 .select {
                     filter {
+                        eq("schoolId", schoolId ?: "")
                         eq("studentId", studentId)
                     }
                 }

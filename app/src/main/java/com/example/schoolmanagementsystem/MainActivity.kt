@@ -1,11 +1,18 @@
 package com.example.schoolmanagementsystem
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,6 +36,7 @@ import com.example.schoolmanagementsystem.ui.me.MeScreen
 import com.example.schoolmanagementsystem.ui.message.MessagesScreen
 import com.example.schoolmanagementsystem.ui.myclass.MyClassScreen
 import com.example.schoolmanagementsystem.ui.navigation.Screen
+import com.example.schoolmanagementsystem.ui.notification.AddAnnouncementScreen
 import com.example.schoolmanagementsystem.ui.notification.NotificationListScreen
 import com.example.schoolmanagementsystem.ui.profile.ProfileScreen
 import com.example.schoolmanagementsystem.ui.schoolclass.AddClassScreen
@@ -41,17 +49,37 @@ import com.example.schoolmanagementsystem.ui.subject.SubjectListScreen
 import com.example.schoolmanagementsystem.ui.teacher.AddTeacherScreen
 import com.example.schoolmanagementsystem.ui.teacher.TeacherDetailScreen
 import com.example.schoolmanagementsystem.ui.teacher.TeacherListScreen
+import com.example.schoolmanagementsystem.ui.timetable.AddTimetableEntryScreen
+import com.example.schoolmanagementsystem.ui.timetable.TimetableListScreen
 import com.example.schoolmanagementsystem.ui.timetable.TimetableScreen
 import com.example.schoolmanagementsystem.ui.theme.SchoolManagementSystemTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    private val mainViewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SchoolManagementSystemTheme {
+            val themeMode by mainViewModel.themeMode.collectAsState()
+            val languageCode by mainViewModel.languageCode.collectAsState()
+
+            val darkTheme = when (themeMode) {
+                "light" -> false
+                "dark" -> true
+                else -> isSystemInDarkTheme()
+            }
+
+            val context = LocalContext.current
+            LaunchedEffect(languageCode) {
+                updateLocale(context, languageCode)
+            }
+
+            SchoolManagementSystemTheme(darkTheme = darkTheme) {
                 val navController = rememberNavController()
                 
                 NavHost(
@@ -73,13 +101,21 @@ class MainActivity : ComponentActivity() {
                         DashboardScreen(
                             onNavigate = { route ->
                                 navController.navigate(route)
+                            },
+                            onLogout = {
+                                navController.navigate(Screen.Login.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             }
                         )
                     }
                     
                     // Profile & Me
                     composable(Screen.Me.route) {
-                        MeScreen(onNavigate = { route -> navController.navigate(route) })
+                        MeScreen(
+                            onNavigate = { route -> navController.navigate(route) },
+                            mainViewModel = mainViewModel
+                        )
                     }
                     composable(Screen.Profile.route) {
                         ProfileScreen(onNavigateBack = { navController.popBackStack() })
@@ -118,9 +154,29 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // Timetable (Student View)
-                    composable(Screen.TimetableList.route) {
-                        TimetableScreen(onNavigateBack = { navController.popBackStack() })
+                    // Timetable
+                    composable(
+                        route = Screen.TimetableList.route,
+                        arguments = listOf(navArgument("classId") { type = NavType.StringType; defaultValue = "" })
+                    ) { backStackEntry ->
+                        val classId = backStackEntry.arguments?.getString("classId") ?: ""
+                        TimetableListScreen(
+                            classId = classId,
+                            onAddEntryClick = { id -> 
+                                navController.navigate(Screen.AddTimetableEntry.createRoute(id))
+                            },
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = Screen.AddTimetableEntry.route,
+                        arguments = listOf(navArgument("classId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val classId = backStackEntry.arguments?.getString("classId") ?: ""
+                        AddTimetableEntryScreen(
+                            classId = classId,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     }
 
                     // Fees
@@ -176,6 +232,10 @@ class MainActivity : ComponentActivity() {
                     composable(Screen.ClassList.route) {
                         ClassListScreen(
                             onAddClassClick = { navController.navigate(Screen.AddClass.route) },
+                            onClassClick = { classId ->
+                                // For admin, maybe show class details or timetable management
+                                navController.navigate(Screen.TimetableList.createRoute(classId))
+                            },
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
@@ -255,11 +315,25 @@ class MainActivity : ComponentActivity() {
                     // Announcements
                     composable(Screen.NotificationList.route) {
                         NotificationListScreen(
+                            onAddAnnouncementClick = {
+                                navController.navigate(Screen.AddNotification.route)
+                            },
                             onNavigateBack = { navController.popBackStack() }
                         )
+                    }
+                    composable(Screen.AddNotification.route) {
+                        AddAnnouncementScreen(onNavigateBack = { navController.popBackStack() })
                     }
                 }
             }
         }
+    }
+
+    private fun updateLocale(context: Context, languageCode: String) {
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val config = context.resources.configuration
+        config.setLocale(locale)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
     }
 }

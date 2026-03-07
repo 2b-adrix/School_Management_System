@@ -1,23 +1,28 @@
 package com.example.schoolmanagementsystem.data.repository
 
+import com.example.schoolmanagementsystem.data.manager.SessionManager
 import com.example.schoolmanagementsystem.domain.model.TimetableEntry
 import com.example.schoolmanagementsystem.domain.repository.TimetableRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class TimetableRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest
+    private val postgrest: Postgrest,
+    private val sessionManager: SessionManager
 ) : TimetableRepository {
 
     override fun getTimetableForClass(classId: String): Flow<Resource<List<TimetableEntry>>> = flow {
         emit(Resource.Loading())
         try {
+            val schoolId = sessionManager.schoolId.firstOrNull()
             val timetable = postgrest["timetable"]
                 .select {
                     filter {
+                        eq("schoolId", schoolId ?: "")
                         eq("classId", classId)
                     }
                 }
@@ -30,7 +35,9 @@ class TimetableRepositoryImpl @Inject constructor(
 
     override suspend fun addTimetableEntry(entry: TimetableEntry): Resource<Unit> {
         return try {
-            postgrest["timetable"].insert(entry)
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            val entryWithSchoolId = entry.copy(schoolId = schoolId)
+            postgrest["timetable"].insert(entryWithSchoolId)
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to add timetable entry")
@@ -39,9 +46,11 @@ class TimetableRepositoryImpl @Inject constructor(
 
     override suspend fun updateTimetableEntry(entry: TimetableEntry): Resource<Unit> {
         return try {
-            postgrest["timetable"].update(entry) {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["timetable"].update(entry.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", entry.id)
+                    eq("schoolId", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -52,9 +61,11 @@ class TimetableRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTimetableEntry(id: String): Resource<Unit> {
         return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["timetable"].delete {
                 filter {
                     eq("id", id)
+                    eq("schoolId", schoolId)
                 }
             }
             Resource.Success(Unit)

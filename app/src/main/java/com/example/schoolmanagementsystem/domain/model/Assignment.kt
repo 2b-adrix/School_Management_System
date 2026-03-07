@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Assignment(
     val id: String,
+    val schoolId: String,
     val title: String,
     val description: String,
     val subject: String,

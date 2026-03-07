@@ -42,6 +42,7 @@ fun LoginScreen(
                 is AuthViewModel.UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
+                is AuthViewModel.UiEvent.Logout -> { /* No-op on login screen */ }
             }
         }
     }

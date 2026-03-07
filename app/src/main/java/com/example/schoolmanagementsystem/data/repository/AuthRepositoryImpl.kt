@@ -23,12 +23,22 @@ class AuthRepositoryImpl @Inject constructor(
             }
             val currentUser = supabaseAuth.currentUserOrNull()
             if (currentUser != null) {
+                val roleString = currentUser.userMetadata?.get("role")?.toString()?.uppercase() ?: "STUDENT"
+                val role = try {
+                    UserRole.valueOf(roleString)
+                } catch (e: Exception) {
+                    UserRole.STUDENT
+                }
+                
+                val schoolId = currentUser.userMetadata?.get("school_id")?.toString() ?: ""
+                
                 Resource.Success(
                     User(
                         id = currentUser.id,
                         name = currentUser.userMetadata?.get("full_name")?.toString() ?: "User",
                         email = currentUser.email ?: email,
-                        role = UserRole.ADMIN 
+                        role = role,
+                        schoolId = schoolId
                     )
                 )
             } else {
@@ -51,11 +61,21 @@ class AuthRepositoryImpl @Inject constructor(
         return supabaseAuth.sessionStatus.map { status ->
             if (status is SessionStatus.Authenticated) {
                 supabaseAuth.currentUserOrNull()?.let { user ->
+                    val roleString = user.userMetadata?.get("role")?.toString()?.uppercase() ?: "STUDENT"
+                    val role = try {
+                        UserRole.valueOf(roleString)
+                    } catch (e: Exception) {
+                        UserRole.STUDENT
+                    }
+                    
+                    val schoolId = user.userMetadata?.get("school_id")?.toString() ?: ""
+                    
                     User(
                         id = user.id,
                         name = user.userMetadata?.get("full_name")?.toString() ?: "User",
                         email = user.email ?: "",
-                        role = UserRole.ADMIN
+                        role = role,
+                        schoolId = schoolId
                     )
                 }
             } else {

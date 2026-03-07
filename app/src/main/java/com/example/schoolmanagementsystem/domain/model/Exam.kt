@@ -1,14 +1,12 @@
 package com.example.schoolmanagementsystem.domain.model
 
-import java.util.Date
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Exam(
     val id: String,
-    val title: String,
-    val description: String,
-    val subjectId: String,
+    val schoolId: String,
     val classId: String,
-    val date: Date,
-    val totalMarks: Int,
-    val createdBy: String
+    val name: String,
+    val date: String
 )

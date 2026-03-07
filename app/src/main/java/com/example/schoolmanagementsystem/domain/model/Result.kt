@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Result(
     val id: String,
+    val schoolId: String,
     val examId: String,
     val studentId: String,
     val subjectId: String,

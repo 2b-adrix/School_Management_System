@@ -1,5 +1,6 @@
 package com.example.schoolmanagementsystem.ui.dashboard
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,15 +10,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.*
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -27,84 +27,142 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.ui.navigation.Screen
 import com.example.schoolmanagementsystem.ui.theme.spacing
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigate: (String) -> Unit,
+    onLogout: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val primaryColor = MaterialTheme.colorScheme.primary
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(key1 = true) {
+        viewModel.eventFlow.collectLatest { event ->
+            when (event) {
+                is DashboardViewModel.UiEvent.LogoutSuccess -> onLogout()
+            }
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = MaterialTheme.colorScheme.surface,
-                drawerShape = RoundedCornerShape(0.dp),
+                drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp),
                 modifier = Modifier.width(300.dp)
             ) {
-                // Drawer Header
                 DrawerHeader(state)
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
-                // Drawer Items
-                DrawerItem(Icons.Rounded.Home, "Home") { scope.launch { drawerState.close() } }
-                DrawerItem(Icons.AutoMirrored.Rounded.VolumeUp, "Announcements") { onNavigate(Screen.NotificationList.route) }
-                DrawerItem(Icons.Rounded.CalendarToday, "Events") { onNavigate(Screen.Events.route) }
-                DrawerItem(Icons.Rounded.Translate, "Switch language") { }
-                DrawerItem(Icons.Rounded.NotificationsNone, "Notification Settings") { }
-                DrawerItem(Icons.Rounded.VpnKey, "Change password") { }
-                DrawerItem(Icons.Rounded.DarkMode, "Dark Mode") { }
-                
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                
-                Text(
-                    "SWITCH SCHOOL",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                DrawerItem(Icons.AutoMirrored.Rounded.Logout, "LOG OUT") { /* Handle Logout */ }
-                
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    "Version - 1.3.657",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item { DrawerItem(Icons.Rounded.Home, "Home", true) { scope.launch { drawerState.close() } } }
+                    item { DrawerItem(Icons.AutoMirrored.Rounded.VolumeUp, "Announcements") { onNavigate(Screen.NotificationList.route) } }
+                    item { DrawerItem(Icons.Rounded.CalendarToday, "Events") { onNavigate(Screen.Events.route) } }
+                    item { DrawerItem(Icons.Rounded.Translate, "Switch language") { } }
+                    item { DrawerItem(Icons.Rounded.NotificationsNone, "Notifications") { } }
+                    item { DrawerItem(Icons.Rounded.VpnKey, "Change password") { } }
+                    
+                    item {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
+                    }
+                    
+                    item {
+                        Text(
+                            "ACCOUNT",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            ),
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    item { 
+                        DrawerItem(
+                            icon = Icons.AutoMirrored.Rounded.Logout, 
+                            label = "Logout",
+                            textColor = MaterialTheme.colorScheme.error
+                        ) { 
+                            viewModel.logout()
+                        } 
+                    }
+                    
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            contentAlignment = Alignment.BottomStart
+                        ) {
+                            Text(
+                                "Version 2.0.1",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
             }
         }
     ) {
         Scaffold(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
-                CenterAlignedTopAppBar(
+                LargeTopAppBar(
                     title = {
-                        Text(
-                            "Dashboard",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                        )
+                        Column {
+                            Text(
+                                "Hello, ${state.userName.split(" ").firstOrNull() ?: "User"}",
+                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                "Welcome to your dashboard",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Rounded.Menu, contentDescription = "Menu", tint = Color.White)
+                            Icon(Icons.Rounded.Menu, contentDescription = "Menu")
                         }
                     },
                     actions = {
                         IconButton(onClick = { onNavigate(Screen.NotificationList.route) }) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
+                            BadgedBox(badge = { Badge { Text("3") } }) {
+                                Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                            }
+                        }
+                        IconButton(onClick = { onNavigate(Screen.Me.route) }) {
+                            Surface(
+                                modifier = Modifier.size(32.dp),
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Person, 
+                                    contentDescription = "Profile",
+                                    modifier = Modifier.padding(4.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = primaryColor)
+                    colors = TopAppBarDefaults.largeTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
             },
             bottomBar = {
@@ -113,11 +171,13 @@ fun DashboardScreen(
                 }
             }
         ) { padding ->
-            when (state.user?.role) {
-                UserRole.ADMIN -> AdminDashboard(padding, state, onNavigate)
-                UserRole.TEACHER -> TeacherDashboard(padding, onNavigate)
-                UserRole.STUDENT -> StudentDashboard(padding, state, onNavigate)
-                else -> LoadingScreen()
+            Box(modifier = Modifier.padding(padding)) {
+                when (state.user?.role) {
+                    UserRole.ADMIN -> AdminDashboard(state, onNavigate)
+                    UserRole.TEACHER -> TeacherDashboard(onNavigate)
+                    UserRole.STUDENT -> StudentDashboard(state, onNavigate)
+                    else -> LoadingScreen()
+                }
             }
         }
     }
@@ -125,120 +185,279 @@ fun DashboardScreen(
 
 @Composable
 fun DrawerHeader(state: DashboardViewModel.DashboardState) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(16.dp)
-            .statusBarsPadding()
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Rounded.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = state.userName,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    )
                 )
-                Text(
-                    text = state.userSubtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun StudentDashboard(padding: PaddingValues, state: DashboardViewModel.DashboardState, onNavigate: (String) -> Unit) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding),
-        contentPadding = PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item {
-            ProfileHeaderCard(
-                name = state.userName,
-                subtitle = state.userSubtitle,
-                onClick = { onNavigate(Screen.Me.route) }
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            .statusBarsPadding()
+            .padding(24.dp)
+    ) {
+        Column {
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White.copy(alpha = 0.2f)
+            ) {
+                Icon(
+                    Icons.Rounded.School, 
+                    contentDescription = null, 
+                    tint = Color.White, 
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = state.userName,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+            Text(
+                text = state.userSubtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.7f)
+            )
         }
-        item { DashboardItemCard("Attendance", Icons.Rounded.AssignmentTurnedIn, Color(0xFF4CAF50)) { onNavigate(Screen.AttendanceClassSelect.route) } }
-        item { BlockedStatusText() }
-        item { DashboardItemCard("Fees", Icons.Rounded.AttachMoney, Color(0xFFF44336), state.feeDues) { onNavigate(Screen.FeeList.route) } }
-        item { DashboardItemCard("Announcements", Icons.AutoMirrored.Rounded.VolumeUp, Color(0xFFCDDC39)) { onNavigate(Screen.NotificationList.route) } }
-        item { DashboardItemCard("My Subjects", Icons.AutoMirrored.Rounded.LibraryBooks, Color(0xFF00BCD4)) { onNavigate(Screen.SubjectList.route) } }
-        item { DashboardItemCard("Gallery", Icons.Rounded.Image, Color(0xFF00ACC1)) { onNavigate(Screen.Gallery.route) } }
-        item { DashboardItemCard("Exam Reports", Icons.Rounded.Assignment, Color(0xFF7E57C2)) { onNavigate(Screen.ExamClassSelect.route) } }
-        item { BlockedStatusText() }
-        item { DashboardItemCard("Timetable", Icons.Rounded.Alarm, Color(0xFFFFA000), state.timetableClasses) { onNavigate(Screen.TimetableList.route) } }
-        item { DashboardItemCard("Assignments", Icons.Rounded.AssignmentInd, Color(0xFF673AB7)) { onNavigate(Screen.Assignments.route) } }
-        item { DashboardItemCard("Library", Icons.AutoMirrored.Rounded.MenuBook, Color(0xFF8BC34A)) { onNavigate(Screen.Library.route) } }
-        item { DashboardItemCard("Events", Icons.Rounded.CalendarMonth, Color(0xFFE91E63), state.eventsCount) { onNavigate(Screen.Events.route) } }
-        items(state.notices) { notice -> NoticeItemCard(notice) }
-        item { Spacer(modifier = Modifier.height(24.dp)) }
     }
 }
 
 @Composable
-fun TeacherDashboard(padding: PaddingValues, onNavigate: (String) -> Unit) {
-    // Teacher-specific dashboard with management items
+fun StudentDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String) -> Unit) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { ManagementCard("Mark Attendance", "Take attendance for your classes", Icons.Rounded.FactCheck) { onNavigate(Screen.AttendanceClassSelect.route) } }
-        item { ManagementCard("Assignments", "Create and manage assignments", Icons.Rounded.Assignment) { onNavigate(Screen.Assignments.route) } }
-        item { ManagementCard("Exam Marks", "Enter and view exam marks", Icons.Rounded.EditNote) { onNavigate(Screen.ExamClassSelect.route) } }
-        item { ManagementCard("My Classes", "View your assigned classes", Icons.Rounded.Class) { onNavigate(Screen.ClassList.route) } }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Fees Due", style = MaterialTheme.typography.labelLarge)
+                        Text("$ 1,200", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { onNavigate(Screen.FeeList.route) },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Text("Pay Now", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                    Icon(
+                        Icons.Rounded.Payments,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+
+        item {
+            Text(
+                "Quick Actions",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                ActionCard("Attendance", Icons.Rounded.FactCheck, Color(0xFF4CAF50), Modifier.weight(1f)) { onNavigate(Screen.AttendanceClassSelect.route) }
+                ActionCard("Timetable", Icons.AutoMirrored.Rounded.EventNote, Color(0xFF2196F3), Modifier.weight(1f)) { onNavigate(Screen.TimetableList.route) }
+            }
+        }
+
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                ActionCard("Exams", Icons.Rounded.Assignment, Color(0xFFFF9800), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
+                ActionCard("Results", Icons.Rounded.Grade, Color(0xFF9C27B0), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
+            }
+        }
+
+        item {
+            Text(
+                "Recent Announcements",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        items(state.notices) { notice ->
+            NoticeItemCard(notice)
+        }
     }
 }
 
 @Composable
-fun AdminDashboard(padding: PaddingValues, state: DashboardViewModel.DashboardState, onNavigate: (String) -> Unit) {
-    // Admin dashboard with full management capabilities
+fun ActionCard(title: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Card(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = color.copy(alpha = 0.1f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(8.dp))
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(title, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+        }
+    }
+}
+
+@Composable
+fun TeacherDashboard(onNavigate: (String) -> Unit) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            ManagementCard("Class Attendance", "Take attendance for your assigned periods", Icons.Rounded.HowToReg) { onNavigate(Screen.AttendanceClassSelect.route) }
+        }
+        item {
+            ManagementCard("Assignments", "Review and grade student submissions", Icons.Rounded.HistoryEdu) { onNavigate(Screen.Assignments.route) }
+        }
+        item {
+            ManagementCard("Exam Management", "Upload marks and generate report cards", Icons.Rounded.AppRegistration) { onNavigate(Screen.ExamClassSelect.route) }
+        }
+        item {
+            ManagementCard("Student Queries", "Reply to messages from students/parents", Icons.Rounded.QuestionAnswer) { onNavigate(Screen.Messages.route) }
+        }
+    }
+}
+
+@Composable
+fun AdminDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String) -> Unit) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                StatCard("Students", state.studentCount.toString(), Modifier.weight(1f))
-                StatCard("Teachers", state.teacherCount.toString(), Modifier.weight(1f))
+                AdminStatCard("Total Students", state.studentCount.toString(), Icons.Rounded.People, Modifier.weight(1f))
+                AdminStatCard("Total Teachers", state.teacherCount.toString(), Icons.Rounded.SupervisorAccount, Modifier.weight(1f))
             }
         }
-        item { ManagementCard("Manage Students", "Add, view, and edit student profiles", Icons.Rounded.People) { onNavigate(Screen.StudentList.route) } }
-        item { ManagementCard("Manage Teachers", "Add, view, and edit teacher profiles", Icons.Rounded.SupervisorAccount) { onNavigate(Screen.TeacherList.route) } }
-        item { ManagementCard("Manage Classes", "Create and manage school classes", Icons.Rounded.Class) { onNavigate(Screen.ClassList.route) } }
-        item { ManagementCard("Manage Subjects", "Add or update course subjects", Icons.AutoMirrored.Rounded.MenuBook) { onNavigate(Screen.SubjectList.route) } }
-        item { ManagementCard("Manage Fees", "Set up fee structures and track payments", Icons.Rounded.Payments) { onNavigate(Screen.FeeList.route) } }
-        item { ManagementCard("Manage Exams", "Schedule exams and manage results", Icons.Rounded.Assignment) { onNavigate(Screen.ExamClassSelect.route) } }
+        
+        item {
+            Text(
+                "School Administration",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        item { ManagementCard("Students", "Manage student profiles and records", Icons.Rounded.PersonSearch) { onNavigate(Screen.StudentList.route) } }
+        item { ManagementCard("Teachers", "Manage faculty staff and assignments", Icons.Rounded.School) { onNavigate(Screen.TeacherList.route) } }
+        item { ManagementCard("Academic Classes", "Configure classes, sections and subjects", Icons.Rounded.Class) { onNavigate(Screen.ClassList.route) } }
+        item { ManagementCard("Finance & Fees", "Fee collection and expense tracking", Icons.Rounded.AccountBalanceWallet) { onNavigate(Screen.FeeList.route) } }
     }
 }
 
 @Composable
-fun LoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+fun AdminStatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = value, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+            Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+fun DrawerItem(
+    icon: ImageVector, 
+    label: String, 
+    selected: Boolean = false,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit
+) {
+    NavigationDrawerItem(
+        icon = { Icon(icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else textColor) },
+        label = { Text(label, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)) },
+        selected = selected,
+        onClick = onClick,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+            unselectedContainerColor = Color.Transparent,
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            unselectedTextColor = textColor
+        ),
+        shape = RoundedCornerShape(12.dp)
+    )
+}
+
+@Composable
+fun NoticeItemCard(notice: DashboardViewModel.Notice) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        modifier = Modifier.size(8.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary
+                    ) {}
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = notice.title,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = notice.subtitle, 
+                    style = MaterialTheme.typography.bodySmall, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = notice.date, 
+                style = MaterialTheme.typography.labelSmall, 
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+        }
     }
 }
 
@@ -249,10 +468,17 @@ fun ManagementCard(title: String, subtitle: String, icon: ImageVector, onClick: 
             .fillMaxWidth()
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(icon, contentDescription = null, modifier = Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primary)
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -263,139 +489,9 @@ fun ManagementCard(title: String, subtitle: String, icon: ImageVector, onClick: 
 }
 
 @Composable
-fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-            Text(text = value, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold), color = MaterialTheme.colorScheme.onPrimaryContainer)
-        }
-    }
-}
-
-@Composable
-fun DrawerItem(icon: ImageVector, label: String, onClick: () -> Unit) {
-    NavigationDrawerItem(
-        icon = { Icon(icon, contentDescription = null) },
-        label = { Text(label, style = MaterialTheme.typography.bodyMedium) },
-        selected = false,
-        onClick = onClick,
-        modifier = Modifier.padding(horizontal = 8.dp),
-        colors = NavigationDrawerItemDefaults.colors(
-            unselectedContainerColor = Color.Transparent,
-            unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-            unselectedTextColor = MaterialTheme.colorScheme.onSurface
-        )
-    )
-}
-
-@Composable
-fun ProfileHeaderCard(name: String, subtitle: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                Text(text = "Student : $subtitle", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outlineVariant)
-        }
-    }
-}
-
-@Composable
-fun DashboardItemCard(
-    title: String,
-    icon: ImageVector,
-    iconColor: Color,
-    badge: String? = null,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                modifier = Modifier.weight(1f)
-            )
-            if (badge != null) {
-                Text(
-                    text = badge,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-            }
-            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outlineVariant)
-        }
-    }
-}
-
-@Composable
-fun BlockedStatusText() {
-    Text(
-        text = "The reports have been blocked due to unpaid fees.",
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.padding(start = 8.dp, top = 2.dp, bottom = 4.dp)
-    )
-}
-
-@Composable
-fun NoticeItemCard(notice: DashboardViewModel.Notice) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = notice.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    fontSize = 14.sp
-                )
-                Text(text = notice.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(text = notice.date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+fun LoadingScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
     }
 }
 
@@ -461,7 +557,7 @@ fun DashboardBottomNavigation(currentRoute: String, onNavigate: (String) -> Unit
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Rounded.Groups, contentDescription = "Me") },
+            icon = { Icon(Icons.Rounded.Person, contentDescription = "Me") },
             label = { Text("Me") },
             selected = currentRoute == Screen.Me.route,
             onClick = { onNavigate(Screen.Me.route) },

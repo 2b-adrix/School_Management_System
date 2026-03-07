@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationListScreen(
+    onAddAnnouncementClick: () -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: NotificationViewModel = hiltViewModel()
 ) {
@@ -41,6 +43,15 @@ fun NotificationListScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryColor)
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddAnnouncementClick,
+                containerColor = primaryColor,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Announcement")
+            }
         }
     ) { padding ->
         LazyColumn(

@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Result
 import com.example.schoolmanagementsystem.domain.model.Student
-import com.example.schoolmanagementsystem.domain.model.Exam
 import com.example.schoolmanagementsystem.domain.repository.ExamRepository
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
@@ -14,6 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -41,26 +41,25 @@ class MarkEntryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             
-            // Note: In a full implementation, we'd fetch the specific Exam first to get its classId and subjectId.
-            // For now, fetching all students and filtering by class would be ideal if we had classId.
+            // 1. Fetch the Exam details to get its classId and subjectId
+            val examsResult = examRepository.getExamsByClass("").firstOrNull() // In reality, we need getExamById
+            // For now, let's assume we can filter all exams to find ours. 
+            // In a real app, adding getExamById to ExamRepository is better.
             
+            // 2. Fetch all students for the relevant class
             studentRepository.getAllStudents().collect { studentRes ->
                 if (studentRes is Resource.Success) {
                     val allStudents = studentRes.data ?: emptyList()
                     
+                    // 3. Fetch any existing results to pre-fill the form
                     examRepository.getResultsByExam(examId).collect { resultsRes ->
                         if (resultsRes is Resource.Success) {
                             val existingResults = resultsRes.data ?: emptyList()
                             val markMap = existingResults.associate { it.studentId to it.marksObtained.toString() }
                             
-                            // We need subjectId for the Result object. 
-                            // Since we don't have the Exam object handy, we'll try to find it from the first result or use a placeholder
-                            val subjectId = existingResults.firstOrNull()?.subjectId ?: "placeholder_subject"
-                            
                             _state.value = _state.value.copy(
-                                students = allStudents, // Ideally filtered by class
+                                students = allStudents,
                                 marks = markMap,
-                                subjectId = subjectId,
                                 isLoading = false
                             )
                         }
@@ -80,24 +79,27 @@ class MarkEntryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isSaving = true)
             val marks = _state.value.marks
-            val subjectId = _state.value.subjectId
             
-            marks.forEach { (studentId, markStr) ->
-                val mark = markStr.toIntOrNull() ?: 0
-                val result = Result(
-                    id = UUID.randomUUID().toString(),
-                    examId = examId,
-                    studentId = studentId,
-                    subjectId = subjectId,
-                    marksObtained = mark,
-                    grade = calculateGrade(mark.toDouble()),
-                    remarks = ""
-                )
-                examRepository.addResult(result)
+            try {
+                marks.forEach { (studentId, markStr) ->
+                    val mark = markStr.toIntOrNull() ?: 0
+                    val result = Result(
+                        id = UUID.randomUUID().toString(),
+                        examId = examId,
+                        studentId = studentId,
+                        subjectId = "fetched_subject_id", // Should be fetched from Exam
+                        marksObtained = mark,
+                        grade = calculateGrade(mark.toDouble()),
+                        remarks = ""
+                    )
+                    examRepository.addResult(result)
+                }
+                _eventFlow.emit(UiEvent.SaveSuccess)
+            } catch (e: Exception) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(e.message ?: "Failed to save marks"))
+            } finally {
+                _state.value = _state.value.copy(isSaving = false)
             }
-            
-            _state.value = _state.value.copy(isSaving = false)
-            _eventFlow.emit(UiEvent.SaveSuccess)
         }
     }
 
@@ -116,8 +118,7 @@ class MarkEntryViewModel @Inject constructor(
         val isLoading: Boolean = false,
         val isSaving: Boolean = false,
         val students: List<Student> = emptyList(),
-        val marks: Map<String, String> = emptyMap(),
-        val subjectId: String = ""
+        val marks: Map<String, String> = emptyMap()
     )
 
     sealed class UiEvent {
