@@ -13,8 +13,8 @@ interface SubjectDao {
     fun getAllSubjects(): Flow<List<SubjectEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSubject(subject: SubjectEntity)
+    fun insertSubject(subject: SubjectEntity): Long
 
     @Query("SELECT * FROM subjects WHERE id = :id")
-    suspend fun getSubjectById(id: String): SubjectEntity?
+    fun getSubjectById(id: String): SubjectEntity?
 }

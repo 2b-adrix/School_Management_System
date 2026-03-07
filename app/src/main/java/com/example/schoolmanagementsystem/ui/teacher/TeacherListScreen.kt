@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalLayoutApi::class)
+
 package com.example.schoolmanagementsystem.ui.teacher
 
 import androidx.compose.foundation.layout.*
@@ -141,6 +143,7 @@ fun TeacherItem(teacher: Teacher, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(spacing().spacing4))
 
             Column(modifier = Modifier.weight(1f)) {
+                @Suppress("DEPRECATION")
                 Text(
                     text = "${teacher.firstName} ${teacher.lastName}",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),

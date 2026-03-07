@@ -10,7 +10,7 @@ interface ResultDao {
     fun getResultsByExam(examId: String): Flow<List<ResultEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertResult(result: ResultEntity)
+    fun insertResult(result: ResultEntity): Long
 
     @Query("SELECT * FROM results WHERE studentId = :studentId")
     fun getResultsByStudent(studentId: String): Flow<List<ResultEntity>>

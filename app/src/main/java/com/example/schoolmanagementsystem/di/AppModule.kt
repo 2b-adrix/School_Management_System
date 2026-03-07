@@ -82,6 +82,12 @@ abstract class AppModule {
 
     @Binds
     @Singleton
+    abstract fun bindAnnouncementRepository(
+        announcementRepositoryImpl: AnnouncementRepositoryImpl
+    ): AnnouncementRepository
+
+    @Binds
+    @Singleton
     abstract fun bindPdfService(
         pdfServiceImpl: PdfServiceImpl
     ): PdfService
