@@ -13,8 +13,8 @@ interface ExamDao {
     fun getExamsByClass(classId: String): Flow<List<ExamEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExam(exam: ExamEntity)
+    fun insertExam(exam: ExamEntity): Long
 
     @Query("SELECT * FROM exams WHERE id = :id")
-    suspend fun getExamById(id: String): ExamEntity?
+    fun getExamById(id: String): ExamEntity?
 }

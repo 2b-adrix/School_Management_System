@@ -8,4 +8,6 @@ interface SubjectRepository {
     fun getAllSubjects(): Flow<Resource<List<Subject>>>
     suspend fun getSubjectById(id: String): Resource<Subject>
     suspend fun addSubject(subject: Subject): Resource<Unit>
+    suspend fun updateSubject(subject: Subject): Resource<Unit>
+    suspend fun deleteSubject(subject: Subject): Resource<Unit>
 }

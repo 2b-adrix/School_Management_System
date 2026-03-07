@@ -16,6 +16,7 @@ fun AddFeeStructureScreen(
     viewModel: FeeViewModel = hiltViewModel()
 ) {
     var className by remember { mutableStateOf("") }
+    var feeName by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -57,6 +58,12 @@ fun AddFeeStructureScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
+                value = feeName,
+                onValueChange = { feeName = it },
+                label = { Text("Fee Name *") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
                 label = { Text("Amount *") },
@@ -76,7 +83,7 @@ fun AddFeeStructureScreen(
             )
 
             Button(
-                onClick = { viewModel.addFeeStructure(className, amount, dueDate, description) },
+                onClick = { viewModel.addFeeStructure(className, feeName, amount, dueDate, description) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = saveState !is Resource.Loading
             ) {

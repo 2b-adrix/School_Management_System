@@ -44,6 +44,36 @@ class FeeRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateFeeStructure(feeStructure: FeeStructure): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["fee_structures"].update(feeStructure.copy(schoolId = schoolId)) {
+                filter {
+                    eq("id", feeStructure.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update fee structure")
+        }
+    }
+
+    override suspend fun deleteFeeStructure(feeStructure: FeeStructure): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["fee_structures"].delete {
+                filter {
+                    eq("id", feeStructure.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete fee structure")
+        }
+    }
+
     override fun getPaymentsByStudent(studentId: String): Flow<Resource<List<FeePayment>>> = flow {
         emit(Resource.Loading())
         try {
@@ -70,6 +100,21 @@ class FeeRepositoryImpl @Inject constructor(
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to record payment")
+        }
+    }
+
+    override suspend fun deletePayment(payment: FeePayment): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["fee_payments"].delete {
+                filter {
+                    eq("id", payment.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete payment")
         }
     }
 }

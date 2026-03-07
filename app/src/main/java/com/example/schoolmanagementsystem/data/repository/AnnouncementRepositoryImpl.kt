@@ -66,6 +66,21 @@ class AnnouncementRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateAnnouncement(announcement: Announcement): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["announcements"].update(announcement.copy(schoolId = schoolId)) {
+                filter {
+                    eq("id", announcement.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update announcement")
+        }
+    }
+
     override suspend fun deleteAnnouncement(id: String): Resource<Unit> {
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""

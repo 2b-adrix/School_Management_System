@@ -65,6 +65,11 @@ fun DashboardScreen(
                     item { DrawerItem(Icons.Rounded.Home, "Home", true) { scope.launch { drawerState.close() } } }
                     item { DrawerItem(Icons.AutoMirrored.Rounded.VolumeUp, "Announcements") { onNavigate(Screen.NotificationList.route) } }
                     item { DrawerItem(Icons.Rounded.CalendarToday, "Events") { onNavigate(Screen.Events.route) } }
+                    
+                    if (state.user?.role == UserRole.SCHOOL_ADMIN || state.user?.role == UserRole.SUPER_ADMIN) {
+                        item { DrawerItem(Icons.Rounded.AdminPanelSettings, "Admin Portal", textColor = MaterialTheme.colorScheme.primary) { onNavigate(Screen.AdminPortal.route) } }
+                    }
+
                     item { DrawerItem(Icons.Rounded.Translate, "Switch language") { } }
                     item { DrawerItem(Icons.Rounded.NotificationsNone, "Notifications") { } }
                     item { DrawerItem(Icons.Rounded.VpnKey, "Change password") { } }
@@ -366,16 +371,16 @@ fun AdminDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String
         
         item {
             Text(
-                "School Administration",
+                "Admin Control Panel",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
 
+        item { ManagementCard("Admin Portal", "Advanced school management and configurations", Icons.Rounded.AdminPanelSettings) { onNavigate(Screen.AdminPortal.route) } }
         item { ManagementCard("Students", "Manage student profiles and records", Icons.Rounded.PersonSearch) { onNavigate(Screen.StudentList.route) } }
         item { ManagementCard("Teachers", "Manage faculty staff and assignments", Icons.Rounded.School) { onNavigate(Screen.TeacherList.route) } }
         item { ManagementCard("Academic Classes", "Configure classes, sections and subjects", Icons.Rounded.Class) { onNavigate(Screen.ClassList.route) } }
-        item { ManagementCard("Finance & Fees", "Fee collection and expense tracking", Icons.Rounded.AccountBalanceWallet) { onNavigate(Screen.FeeList.route) } }
     }
 }
 

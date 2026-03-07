@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -30,6 +32,16 @@ class FeeViewModel @Inject constructor(
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
+
+    init {
+        getFeeStructures()
+    }
+
+    fun getFeeStructures() {
+        feeRepository.getFeeStructures().onEach { result ->
+            _state.value = _state.value.copy(feeStructures = result)
+        }.launchIn(viewModelScope)
+    }
 
     data class FeeState(
         val selectedTab: Int = 0,
@@ -73,8 +85,20 @@ class FeeViewModel @Inject constructor(
             _saveState.value = result
             if (result is Resource.Success) {
                 _eventFlow.emit(UiEvent.SaveSuccess)
+                getFeeStructures()
             } else if (result is Resource.Error) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Error saving fee structure"))
+            }
+        }
+    }
+
+    fun deleteFeeStructure(feeStructure: FeeStructure) {
+        viewModelScope.launch {
+            val result = feeRepository.deleteFeeStructure(feeStructure)
+            if (result is Resource.Success) {
+                getFeeStructures()
+            } else if (result is Resource.Error) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Error deleting fee structure"))
             }
         }
     }

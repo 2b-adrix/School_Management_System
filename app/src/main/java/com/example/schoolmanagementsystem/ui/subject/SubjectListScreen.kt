@@ -7,12 +7,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,10 +23,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.domain.model.Subject
 import com.example.schoolmanagementsystem.domain.util.Resource
+import com.example.schoolmanagementsystem.ui.components.AppCard
 import com.example.schoolmanagementsystem.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
+import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectListScreen(
     onAddSubjectClick: () -> Unit,
@@ -34,20 +35,24 @@ fun SubjectListScreen(
     viewModel: SubjectListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val primaryColor = MaterialTheme.colorScheme.primary
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text("Subjects", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryColor)
+            SchoolTopAppBar(
+                title = "Subjects",
+                onBackClick = onNavigateBack
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddSubjectClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Subject")
+            }
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -64,7 +69,10 @@ fun SubjectListScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(subjects) { subject ->
-                                SubjectListItem(subject = subject)
+                                SubjectListItem(
+                                    subject = subject,
+                                    onDelete = { viewModel.deleteSubject(subject) }
+                                )
                             }
                         }
                     }
@@ -79,13 +87,31 @@ fun SubjectListScreen(
 }
 
 @Composable
-fun SubjectListItem(subject: Subject) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+fun SubjectListItem(subject: Subject, onDelete: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Subject") },
+            text = { Text("Are you sure you want to delete ${subject.name}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    AppCard {
         Column {
             Row(
                 modifier = Modifier.padding(16.dp),
@@ -95,46 +121,51 @@ fun SubjectListItem(subject: Subject) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = subject.name, 
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            fontSize = 16.sp
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = subject.code, 
-                            style = MaterialTheme.typography.bodySmall, 
-                            color = Color.Gray
-                        )
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = subject.code, 
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Weekly classes : ${if(subject.name.contains("Math")) 6 else if(subject.name.contains("Hindi")) 2 else 4}", 
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Black
+                }
+                IconButton(onClick = { showDeleteConfirm = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
                     )
                 }
             }
             
-            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
             
-            // Teacher Row as per Screenshot 8
             Row(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFEEEEEE)),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier.size(32.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    Icon(Icons.Rounded.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Teacher Name", 
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.Black
+                    text = "Department: ${subject.id.take(4).uppercase()}", 
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -144,6 +175,6 @@ fun SubjectListItem(subject: Subject) {
 @Composable
 fun EmptySubjectsState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("No subjects found", color = Color.Gray)
+        Text("No subjects found", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

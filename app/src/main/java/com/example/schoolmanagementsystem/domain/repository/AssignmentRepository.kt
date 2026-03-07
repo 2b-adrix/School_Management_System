@@ -7,5 +7,6 @@ import kotlinx.coroutines.flow.Flow
 interface AssignmentRepository {
     fun getAllAssignments(): Flow<Resource<List<Assignment>>>
     suspend fun createAssignment(assignment: Assignment): Resource<Unit>
+    suspend fun deleteAssignment(id: String): Resource<Unit>
     fun getAssignmentsForClass(classId: String): Flow<Resource<List<Assignment>>>
 }

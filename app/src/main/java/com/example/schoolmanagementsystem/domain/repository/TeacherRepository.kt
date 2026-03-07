@@ -8,4 +8,6 @@ interface TeacherRepository {
     fun getAllTeachers(): Flow<Resource<List<Teacher>>>
     suspend fun getTeacherById(id: String): Resource<Teacher>
     suspend fun addTeacher(teacher: Teacher): Resource<Unit>
+    suspend fun updateTeacher(teacher: Teacher): Resource<Unit>
+    suspend fun deleteTeacher(teacher: Teacher): Resource<Unit>
 }

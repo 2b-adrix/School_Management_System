@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,9 +25,22 @@ class StudentListViewModel @Inject constructor(
         getStudents()
     }
 
+    fun refresh() {
+        getStudents()
+    }
+
     private fun getStudents() {
         repository.getAllStudents().onEach { result ->
             _state.value = result
         }.launchIn(viewModelScope)
+    }
+
+    fun deleteStudent(student: Student) {
+        viewModelScope.launch {
+            val result = repository.deleteStudent(student)
+            if (result is Resource.Success) {
+                getStudents()
+            }
+        }
     }
 }

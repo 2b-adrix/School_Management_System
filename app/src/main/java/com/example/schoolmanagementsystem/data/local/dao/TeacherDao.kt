@@ -13,10 +13,8 @@ interface TeacherDao {
     fun getAllTeachers(): Flow<List<TeacherEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTeacher(teacher: TeacherEntity)
+    fun insertTeacher(teacher: TeacherEntity): Long
 
     @Query("SELECT * FROM teachers WHERE id = :id")
-    suspend fun getTeacherById(id: String): TeacherEntity?
-
-    // TODO: Add Update and Delete operations for production
+    fun getTeacherById(id: String): TeacherEntity?
 }

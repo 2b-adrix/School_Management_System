@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
@@ -84,7 +85,7 @@ fun StudentListScreen(
                     is Resource.Loading -> LoadingScreen()
                     is Resource.Error -> ErrorScreen(
                         message = result.message ?: "An error occurred",
-                        onRetry = { /* viewModel.refresh() */ }
+                        onRetry = { viewModel.refresh() }
                     )
                     is Resource.Success -> {
                         val students = result.data ?: emptyList()
@@ -105,7 +106,8 @@ fun StudentListScreen(
                                 items(filteredStudents) { student ->
                                     StudentItem(
                                         student = student,
-                                        onClick = { onStudentClick(student.id) }
+                                        onClick = { onStudentClick(student.id) },
+                                        onDelete = { viewModel.deleteStudent(student) }
                                     )
                                 }
                             }
@@ -118,7 +120,30 @@ fun StudentListScreen(
 }
 
 @Composable
-fun StudentItem(student: Student, onClick: () -> Unit) {
+fun StudentItem(student: Student, onClick: () -> Unit, onDelete: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Student") },
+            text = { Text("Are you sure you want to delete ${student.firstName} ${student.lastName}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     AppCard(onClick = onClick) {
         Row(
             modifier = Modifier
@@ -171,13 +196,13 @@ fun StudentItem(student: Student, onClick: () -> Unit) {
                 }
             }
 
-            // Status Indicator (Optional)
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF4CAF50))
-            )
+            IconButton(onClick = { showDeleteConfirm = true }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }

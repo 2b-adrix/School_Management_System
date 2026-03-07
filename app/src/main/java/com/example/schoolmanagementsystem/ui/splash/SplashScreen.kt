@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.ui.auth.AuthViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun SplashScreen(
@@ -37,13 +38,16 @@ fun SplashScreen(
                 easing = { OvershootInterpolator(2f).getInterpolation(it) }
             )
         )
-        delay(1500L)
         
-        // Use Supabase session check via AuthViewModel
-        // If logged in, go to dashboard, else login
-        // For now, let's assume viewModel.getCurrentUser() is used in the MainActivity
-        // but we can trigger a check here.
-        onNavigateToLogin() // Default for splash demo
+        // Check current session
+        val user = viewModel.currentUser.value
+        delay(1000L)
+        
+        if (user != null) {
+            onNavigateToDashboard()
+        } else {
+            onNavigateToLogin()
+        }
     }
 
     Box(

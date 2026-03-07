@@ -58,4 +58,34 @@ class SubjectRepositoryImpl @Inject constructor(
             Resource.Error(e.message ?: "Failed to add subject")
         }
     }
+
+    override suspend fun updateSubject(subject: Subject): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["subjects"].update(subject.copy(schoolId = schoolId)) {
+                filter {
+                    eq("id", subject.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update subject")
+        }
+    }
+
+    override suspend fun deleteSubject(subject: Subject): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["subjects"].delete {
+                filter {
+                    eq("id", subject.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete subject")
+        }
+    }
 }

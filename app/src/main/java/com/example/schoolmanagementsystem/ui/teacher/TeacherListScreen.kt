@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalLayoutApi::class)
+
 package com.example.schoolmanagementsystem.ui.teacher
 
 import androidx.compose.foundation.layout.*
@@ -7,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.*
@@ -102,7 +105,8 @@ fun TeacherListScreen(
                                 items(filteredTeachers) { teacher ->
                                     TeacherItem(
                                         teacher = teacher,
-                                        onClick = { onTeacherClick(teacher.id) }
+                                        onClick = { onTeacherClick(teacher.id) },
+                                        onDelete = { viewModel.deleteTeacher(teacher) }
                                     )
                                 }
                             }
@@ -115,7 +119,30 @@ fun TeacherListScreen(
 }
 
 @Composable
-fun TeacherItem(teacher: Teacher, onClick: () -> Unit) {
+fun TeacherItem(teacher: Teacher, onClick: () -> Unit, onDelete: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Teacher") },
+            text = { Text("Are you sure you want to delete ${teacher.firstName} ${teacher.lastName}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     AppCard(onClick = onClick) {
         Row(
             modifier = Modifier
@@ -141,6 +168,7 @@ fun TeacherItem(teacher: Teacher, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(spacing().spacing4))
 
             Column(modifier = Modifier.weight(1f)) {
+                @Suppress("DEPRECATION")
                 Text(
                     text = "${teacher.firstName} ${teacher.lastName}",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -169,6 +197,14 @@ fun TeacherItem(teacher: Teacher, onClick: () -> Unit) {
                         }
                     }
                 }
+            }
+
+            IconButton(onClick = { showDeleteConfirm = true }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                )
             }
         }
     }

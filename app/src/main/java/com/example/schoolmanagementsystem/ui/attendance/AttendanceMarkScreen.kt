@@ -20,6 +20,7 @@ import com.example.schoolmanagementsystem.ui.components.AppCard
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
 import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
 import com.example.schoolmanagementsystem.ui.theme.spacing
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun AttendanceMarkScreen(
@@ -27,13 +28,14 @@ fun AttendanceMarkScreen(
     viewModel: AttendanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.eventFlow.collect { event ->
+        viewModel.eventFlow.collectLatest { event ->
             when (event) {
                 is AttendanceViewModel.UiEvent.SaveSuccess -> onNavigateBack()
                 is AttendanceViewModel.UiEvent.ShowSnackbar -> {
-                    // Show snackbar
+                    snackbarHostState.showSnackbar(event.message)
                 }
             }
         }
@@ -41,6 +43,7 @@ fun AttendanceMarkScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SchoolTopAppBar(
                 title = "Mark Attendance",
@@ -50,9 +53,18 @@ fun AttendanceMarkScreen(
                         onClick = { viewModel.saveAttendance() },
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
+                        enabled = !state.isLoading && !state.isSaving
                     ) {
-                        Text("Save", style = MaterialTheme.typography.labelLarge)
+                        if (state.isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text("Save", style = MaterialTheme.typography.labelLarge)
+                        }
                     }
                 }
             )

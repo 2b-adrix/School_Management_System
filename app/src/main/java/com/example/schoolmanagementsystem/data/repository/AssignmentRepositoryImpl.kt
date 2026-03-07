@@ -33,6 +33,19 @@ class AssignmentRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteAssignment(id: String): Resource<Unit> {
+        return try {
+            postgrest["assignments"].delete {
+                filter {
+                    eq("id", id)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete assignment")
+        }
+    }
+
     override fun getAssignmentsForClass(classId: String): Flow<Resource<List<Assignment>>> = flow {
         emit(Resource.Loading())
         try {

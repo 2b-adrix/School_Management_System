@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.schoolmanagementsystem.ui.admin.AdminPortalScreen
 import com.example.schoolmanagementsystem.ui.assignment.AssignmentScreen
 import com.example.schoolmanagementsystem.ui.attendance.AttendanceClassSelectScreen
 import com.example.schoolmanagementsystem.ui.attendance.AttendanceMarkScreen
@@ -109,6 +110,13 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+                    composable(Screen.AdminPortal.route) {
+                        AdminPortalScreen(
+                            onNavigate = { route -> navController.navigate(route) },
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
                     
                     // Profile & Me
                     composable(Screen.Me.route) {
@@ -181,7 +189,13 @@ class MainActivity : ComponentActivity() {
 
                     // Fees
                     composable(Screen.FeeList.route) {
-                        FeeScreen(onNavigateBack = { navController.popBackStack() })
+                        FeeScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onAddFeeClick = { navController.navigate(Screen.AddFeeStructure.route) }
+                        )
+                    }
+                    composable(Screen.AddFeeStructure.route) {
+                        AddFeeStructureScreen(onNavigateBack = { navController.popBackStack() })
                     }
 
                     // Students (Admin/Teacher View)

@@ -32,6 +32,9 @@ fun TeacherDetailScreen(
                 is TeacherDetailViewModel.UiEvent.ShowSnackbar -> {
                     // Show snackbar
                 }
+                is TeacherDetailViewModel.UiEvent.DeleteSuccess -> {
+                    onNavigateBack()
+                }
             }
         }
     }

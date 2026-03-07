@@ -59,4 +59,34 @@ class TeacherRepositoryImpl @Inject constructor(
             Resource.Error(e.message ?: "Failed to add teacher")
         }
     }
+
+    override suspend fun updateTeacher(teacher: Teacher): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["teachers"].update(teacher.copy(schoolId = schoolId)) {
+                filter {
+                    eq("id", teacher.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update teacher")
+        }
+    }
+
+    override suspend fun deleteTeacher(teacher: Teacher): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["teachers"].delete {
+                filter {
+                    eq("id", teacher.id)
+                    eq("schoolId", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete teacher")
+        }
+    }
 }

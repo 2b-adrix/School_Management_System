@@ -24,24 +24,36 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.MainViewModel
 import com.example.schoolmanagementsystem.R
+import com.example.schoolmanagementsystem.ui.auth.AuthViewModel
 import com.example.schoolmanagementsystem.ui.dashboard.DashboardBottomNavigation
 import com.example.schoolmanagementsystem.ui.navigation.Screen
 import com.example.schoolmanagementsystem.ui.profile.ProfileViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MeScreen(
     onNavigate: (String) -> Unit,
-    viewModel: ProfileViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
     mainViewModel: MainViewModel
 ) {
-    val state by viewModel.state.collectAsState()
+    val profileState by profileViewModel.state.collectAsState()
     val themeMode by mainViewModel.themeMode.collectAsState()
     val languageCode by mainViewModel.languageCode.collectAsState()
+    val currentUser by authViewModel.currentUser.collectAsState()
     
     val primaryColor = MaterialTheme.colorScheme.primary
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        authViewModel.eventFlow.collectLatest { event ->
+            if (event is AuthViewModel.UiEvent.Logout) {
+                onNavigate(Screen.Login.route)
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -86,8 +98,17 @@ fun MeScreen(
                         Icon(Icons.Rounded.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(60.dp))
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(state.name, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text(state.subtitle, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                    Text(
+                        currentUser?.name ?: profileState.name, 
+                        color = Color.White, 
+                        fontSize = 22.sp, 
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        currentUser?.role?.name ?: profileState.subtitle, 
+                        color = Color.White.copy(alpha = 0.8f), 
+                        fontSize = 14.sp
+                    )
                 }
             }
 
@@ -136,7 +157,7 @@ fun MeScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
-                onClick = { /* Handle Logout */ },
+                onClick = { authViewModel.logout() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),

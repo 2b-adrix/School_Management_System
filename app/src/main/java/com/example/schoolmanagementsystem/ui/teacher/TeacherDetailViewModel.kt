@@ -41,10 +41,22 @@ class TeacherDetailViewModel @Inject constructor(
         }
     }
 
-    // TODO: Implement deleteTeacher if needed, similar to StudentDetailViewModel
+    fun deleteTeacher() {
+        viewModelScope.launch {
+            val currentTeacher = (state.value as? Resource.Success)?.data
+            currentTeacher?.let { teacher ->
+                val result = repository.deleteTeacher(teacher)
+                if (result is Resource.Success) {
+                    _eventFlow.emit(UiEvent.DeleteSuccess)
+                } else {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Failed to delete"))
+                }
+            }
+        }
+    }
 
     sealed class UiEvent {
-        // object DeleteSuccess : UiEvent()
+        object DeleteSuccess : UiEvent()
         data class ShowSnackbar(val message: String) : UiEvent()
     }
 }

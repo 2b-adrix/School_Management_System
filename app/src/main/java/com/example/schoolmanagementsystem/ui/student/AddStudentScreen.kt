@@ -52,6 +52,8 @@ fun AddStudentScreen(
     var parentContact by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var dob by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     // Real-time Validation States
@@ -87,7 +89,7 @@ fun AddStudentScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SchoolTopAppBar(
-                title = "Add New Student",
+                title = "Register Student",
                 onBackClick = onNavigateBack
             )
         },
@@ -136,6 +138,24 @@ fun AddStudentScreen(
 
             Spacer(modifier = Modifier.height(spacing().spacing2))
 
+            SectionTitle(title = "Student Login Credentials")
+            AppTextField(
+                label = "Student Email ID *",
+                value = email,
+                onValueChange = { email = it },
+                leadingIcon = Icons.Rounded.Email,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+            )
+            AppTextField(
+                label = "Login Password *",
+                value = password,
+                onValueChange = { password = it },
+                leadingIcon = Icons.Rounded.Lock,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+            )
+
             SectionTitle(title = "Basic Information")
             AppTextField(
                 label = "First Name *",
@@ -166,7 +186,7 @@ fun AddStudentScreen(
                 keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
             )
             AppTextField(
-                label = "Class",
+                label = "Class ID *",
                 value = className,
                 onValueChange = { className = it },
                 leadingIcon = Icons.Rounded.Class,
@@ -216,7 +236,7 @@ fun AddStudentScreen(
             Spacer(modifier = Modifier.height(spacing().spacing4))
 
             PrimaryButton(
-                text = "Register Student",
+                text = "Register Student & Create ID",
                 onClick = {
                     val bytes = imageUri?.let { uri ->
                         context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
@@ -231,11 +251,13 @@ fun AddStudentScreen(
                         parentContact = parentContact,
                         address = address,
                         dob = dob,
+                        email = email,
+                        password = password,
                         imageBytes = bytes
                     )
                 },
                 isLoading = saveState is Resource.Loading,
-                enabled = firstNameError == null && rollError == null && contactError == null && firstName.isNotEmpty() && rollNumber.isNotEmpty()
+                enabled = firstNameError == null && rollError == null && contactError == null && firstName.isNotEmpty() && rollNumber.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()
             )
             
             Spacer(modifier = Modifier.height(spacing().spacing8))

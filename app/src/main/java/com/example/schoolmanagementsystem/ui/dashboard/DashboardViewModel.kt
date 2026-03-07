@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.User
 import com.example.schoolmanagementsystem.domain.model.UserRole
+import com.example.schoolmanagementsystem.domain.repository.AnnouncementRepository
 import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.ClassRepository
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
@@ -25,7 +26,8 @@ class DashboardViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val studentRepository: StudentRepository,
     private val teacherRepository: TeacherRepository,
-    private val classRepository: ClassRepository
+    private val classRepository: ClassRepository,
+    private val announcementRepository: AnnouncementRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardState())
@@ -37,6 +39,7 @@ class DashboardViewModel @Inject constructor(
     init {
         observeUser()
         loadStats()
+        loadAnnouncements()
     }
 
     private fun observeUser() {
@@ -79,6 +82,17 @@ class DashboardViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    private fun loadAnnouncements() {
+        announcementRepository.getAllAnnouncements().onEach { result ->
+            if (result is Resource.Success) {
+                val notices = result.data?.take(5)?.map { 
+                    Notice(it.title, it.content, it.createdAt)
+                } ?: emptyList()
+                _state.value = _state.value.copy(notices = notices)
+            }
+        }.launchIn(viewModelScope)
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
@@ -96,10 +110,7 @@ class DashboardViewModel @Inject constructor(
         val feeDues: String = "3 dues",
         val timetableClasses: String = "8 classes",
         val eventsCount: String = "22 events",
-        val notices: List<Notice> = listOf(
-            Notice("Annual Sports Day 2025", "Event", "15 Mar 2025"),
-            Notice("Final Examination Schedule Out", "Exam", "10 Mar 2025")
-        )
+        val notices: List<Notice> = emptyList()
     )
 
     data class Notice(

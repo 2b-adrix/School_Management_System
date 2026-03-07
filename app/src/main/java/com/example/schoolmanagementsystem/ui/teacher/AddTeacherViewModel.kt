@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.teacher
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Teacher
+import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.StorageRepository
 import com.example.schoolmanagementsystem.domain.repository.TeacherRepository
@@ -34,6 +35,7 @@ class AddTeacherViewModel @Inject constructor(
         firstName: String,
         lastName: String,
         email: String,
+        password: String,
         phoneNumber: String,
         qualification: String,
         joinDate: String,
@@ -41,9 +43,9 @@ class AddTeacherViewModel @Inject constructor(
         assignedClasses: String,
         imageBytes: ByteArray? = null
     ) {
-        if (firstName.isBlank() || lastName.isBlank() || email.isBlank()) {
+        if (firstName.isBlank() || lastName.isBlank() || email.isBlank() || password.isBlank()) {
             viewModelScope.launch {
-                _eventFlow.emit(UiEvent.ShowSnackbar("Please fill required fields"))
+                _eventFlow.emit(UiEvent.ShowSnackbar("Please fill required fields including password"))
             }
             return
         }
@@ -51,10 +53,28 @@ class AddTeacherViewModel @Inject constructor(
         viewModelScope.launch {
             _saveState.value = Resource.Loading()
             
-            val user = authRepository.getCurrentUser().firstOrNull()
+            val adminUser = authRepository.getCurrentUser().firstOrNull()
+            val schoolId = adminUser?.schoolId ?: ""
+
+            // 1. Create Auth Account for Teacher
+            val authResult = authRepository.signUp(
+                email = email,
+                password = password,
+                role = UserRole.TEACHER,
+                fullName = "$firstName $lastName",
+                schoolId = schoolId
+            )
+
+            if (authResult is Resource.Error) {
+                _saveState.value = Resource.Error(authResult.message ?: "Failed to create teacher account")
+                _eventFlow.emit(UiEvent.ShowSnackbar(authResult.message ?: "Failed to create teacher account"))
+                return@launch
+            }
+
+            val teacherId = authResult.data?.id ?: UUID.randomUUID().toString()
             var imageUrl: String? = null
-            val teacherId = UUID.randomUUID().toString()
             
+            // 2. Upload Image if provided
             if (imageBytes != null) {
                 val imageResult = storageRepository.uploadProfileImage(
                     path = "teachers/$teacherId.jpg",
@@ -65,9 +85,10 @@ class AddTeacherViewModel @Inject constructor(
                 }
             }
 
+            // 3. Save Teacher Details in Database
             val teacher = Teacher(
                 id = teacherId,
-                schoolId = user?.schoolId ?: "",
+                schoolId = schoolId,
                 firstName = firstName,
                 lastName = lastName,
                 email = email,
@@ -84,7 +105,7 @@ class AddTeacherViewModel @Inject constructor(
             if (result is Resource.Success) {
                 _eventFlow.emit(UiEvent.SaveSuccess)
             } else if (result is Resource.Error) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Failed to save"))
+                _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Failed to save teacher details"))
             }
         }
     }
