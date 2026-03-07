@@ -7,24 +7,27 @@ import com.example.schoolmanagementsystem.domain.model.Subject
 @Entity(tableName = "subjects")
 data class SubjectEntity(
     @PrimaryKey val id: String,
+    val schoolId: String,
+    val classId: String,
     val name: String,
     val code: String,
-    val classId: String,
     val description: String?
 )
 
 fun SubjectEntity.toDomain() = Subject(
     id = id,
+    schoolId = schoolId,
+    classId = classId,
     name = name,
     code = code,
-    classId = classId,
     description = description
 )
 
 fun Subject.toEntity() = SubjectEntity(
     id = id,
+    schoolId = schoolId,
+    classId = classId,
     name = name,
     code = code,
-    classId = classId,
     description = description
 )

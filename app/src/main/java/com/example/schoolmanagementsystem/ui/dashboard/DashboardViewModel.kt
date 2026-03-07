@@ -49,7 +49,8 @@ class DashboardViewModel @Inject constructor(
                     user = user,
                     userName = user?.name ?: "User",
                     userSubtitle = when(user?.role) {
-                        UserRole.ADMIN -> "Principal"
+                        UserRole.SUPER_ADMIN -> "Super Admin"
+                        UserRole.SCHOOL_ADMIN -> "Principal"
                         UserRole.TEACHER -> "Teacher"
                         UserRole.STUDENT -> "Student"
                         null -> ""

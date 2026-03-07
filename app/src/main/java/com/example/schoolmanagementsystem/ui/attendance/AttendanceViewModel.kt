@@ -82,6 +82,7 @@ class AttendanceViewModel @Inject constructor(
                         val attendanceRecords = students.associate { student ->
                             student.id to AttendanceRecord(
                                 id = UUID.randomUUID().toString(),
+                                schoolId = _state.value.user?.schoolId ?: "",
                                 studentId = student.id,
                                 classId = classId,
                                 subjectId = _state.value.selectedSubjectId,

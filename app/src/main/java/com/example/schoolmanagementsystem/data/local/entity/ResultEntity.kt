@@ -7,6 +7,7 @@ import com.example.schoolmanagementsystem.domain.model.Result
 @Entity(tableName = "results")
 data class ResultEntity(
     @PrimaryKey val id: String,
+    val schoolId: String,
     val examId: String,
     val studentId: String,
     val subjectId: String,
@@ -17,6 +18,7 @@ data class ResultEntity(
 
 fun ResultEntity.toDomain() = Result(
     id = id,
+    schoolId = schoolId,
     examId = examId,
     studentId = studentId,
     subjectId = subjectId,
@@ -27,6 +29,7 @@ fun ResultEntity.toDomain() = Result(
 
 fun Result.toEntity() = ResultEntity(
     id = id,
+    schoolId = schoolId,
     examId = examId,
     studentId = studentId,
     subjectId = subjectId,

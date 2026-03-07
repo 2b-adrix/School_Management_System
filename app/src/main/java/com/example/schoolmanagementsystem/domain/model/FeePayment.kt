@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FeePayment(
     val id: String,
+    val schoolId: String,
     val studentId: String,
     val feeStructureId: String,
     val amountPaid: Double,

@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.teacher
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Teacher
+import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.StorageRepository
 import com.example.schoolmanagementsystem.domain.repository.TeacherRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddTeacherViewModel @Inject constructor(
     private val repository: TeacherRepository,
+    private val authRepository: AuthRepository,
     private val storageRepository: StorageRepository
 ) : ViewModel() {
 
@@ -32,6 +35,8 @@ class AddTeacherViewModel @Inject constructor(
         lastName: String,
         email: String,
         phoneNumber: String,
+        qualification: String,
+        joinDate: String,
         subjects: String,
         assignedClasses: String,
         imageBytes: ByteArray? = null
@@ -46,6 +51,7 @@ class AddTeacherViewModel @Inject constructor(
         viewModelScope.launch {
             _saveState.value = Resource.Loading()
             
+            val user = authRepository.getCurrentUser().firstOrNull()
             var imageUrl: String? = null
             val teacherId = UUID.randomUUID().toString()
             
@@ -61,12 +67,15 @@ class AddTeacherViewModel @Inject constructor(
 
             val teacher = Teacher(
                 id = teacherId,
+                schoolId = user?.schoolId ?: "",
                 firstName = firstName,
                 lastName = lastName,
                 email = email,
                 phoneNumber = phoneNumber,
-                subjects = subjects.split(",").map { it.trim() },
-                assignedClasses = assignedClasses.split(",").map { it.trim() },
+                qualification = qualification,
+                joinDate = joinDate,
+                subjects = if (subjects.isBlank()) emptyList() else subjects.split(",").map { it.trim() },
+                assignedClasses = if (assignedClasses.isBlank()) emptyList() else assignedClasses.split(",").map { it.trim() },
                 profileImageUrl = imageUrl
             )
 

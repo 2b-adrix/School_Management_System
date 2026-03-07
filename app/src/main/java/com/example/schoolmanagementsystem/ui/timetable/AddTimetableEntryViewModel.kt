@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.timetable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.TimetableEntry
+import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.TimetableRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,13 +11,15 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class AddTimetableEntryViewModel @Inject constructor(
-    private val repository: TimetableRepository
+    private val repository: TimetableRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _saveState = MutableStateFlow<Resource<Unit>?>(null)
@@ -43,8 +46,11 @@ class AddTimetableEntryViewModel @Inject constructor(
 
         viewModelScope.launch {
             _saveState.value = Resource.Loading()
+            val user = authRepository.getCurrentUser().firstOrNull()
+            
             val entry = TimetableEntry(
                 id = UUID.randomUUID().toString(),
+                schoolId = user?.schoolId ?: "",
                 classId = classId,
                 subjectId = subjectId,
                 teacherId = teacherId,

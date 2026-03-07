@@ -49,19 +49,15 @@ class AddExamViewModel @Inject constructor(
             _saveState.value = Resource.Loading()
             
             val user = authRepository.getCurrentUser().firstOrNull()
-            val date = try {
-                dateFormat.parse(dateString) ?: Date()
-            } catch (e: Exception) {
-                Date()
-            }
 
             val exam = Exam(
                 id = UUID.randomUUID().toString(),
+                schoolId = user?.schoolId ?: "",
+                classId = classId ?: "",
                 title = title,
                 description = description,
-                classId = classId ?: "",
                 subjectId = subjectId,
-                date = date,
+                date = dateString,
                 totalMarks = totalMarks.toIntOrNull() ?: 100,
                 createdBy = user?.id ?: ""
             )

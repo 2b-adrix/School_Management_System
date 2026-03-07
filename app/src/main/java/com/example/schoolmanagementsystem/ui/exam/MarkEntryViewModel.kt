@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Result
 import com.example.schoolmanagementsystem.domain.model.Student
+import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.ExamRepository
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
@@ -22,6 +23,7 @@ import javax.inject.Inject
 class MarkEntryViewModel @Inject constructor(
     private val examRepository: ExamRepository,
     private val studentRepository: StudentRepository,
+    private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -41,17 +43,10 @@ class MarkEntryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             
-            // 1. Fetch the Exam details to get its classId and subjectId
-            val examsResult = examRepository.getExamsByClass("").firstOrNull() // In reality, we need getExamById
-            // For now, let's assume we can filter all exams to find ours. 
-            // In a real app, adding getExamById to ExamRepository is better.
-            
-            // 2. Fetch all students for the relevant class
             studentRepository.getAllStudents().collect { studentRes ->
                 if (studentRes is Resource.Success) {
                     val allStudents = studentRes.data ?: emptyList()
                     
-                    // 3. Fetch any existing results to pre-fill the form
                     examRepository.getResultsByExam(examId).collect { resultsRes ->
                         if (resultsRes is Resource.Success) {
                             val existingResults = resultsRes.data ?: emptyList()
@@ -79,12 +74,14 @@ class MarkEntryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isSaving = true)
             val marks = _state.value.marks
+            val user = authRepository.getCurrentUser().firstOrNull()
             
             try {
                 marks.forEach { (studentId, markStr) ->
                     val mark = markStr.toIntOrNull() ?: 0
                     val result = Result(
                         id = UUID.randomUUID().toString(),
+                        schoolId = user?.schoolId ?: "",
                         examId = examId,
                         studentId = studentId,
                         subjectId = "fetched_subject_id", // Should be fetched from Exam

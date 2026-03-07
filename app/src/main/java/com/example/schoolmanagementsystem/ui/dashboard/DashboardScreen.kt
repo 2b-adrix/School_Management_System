@@ -173,7 +173,7 @@ fun DashboardScreen(
         ) { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 when (state.user?.role) {
-                    UserRole.ADMIN -> AdminDashboard(state, onNavigate)
+                    UserRole.SCHOOL_ADMIN -> AdminDashboard(state, onNavigate)
                     UserRole.TEACHER -> TeacherDashboard(onNavigate)
                     UserRole.STUDENT -> StudentDashboard(state, onNavigate)
                     else -> LoadingScreen()

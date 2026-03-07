@@ -43,12 +43,12 @@ class AddAnnouncementViewModel @Inject constructor(
             
             val announcement = Announcement(
                 id = UUID.randomUUID().toString(),
+                schoolId = user?.schoolId ?: "",
                 title = title,
                 content = content,
-                date = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date()),
                 targetRole = targetRole,
-                targetClassId = targetClassId,
-                createdBy = user?.id ?: ""
+                targetId = targetClassId,
+                createdAt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
             )
 
             val result = repository.addAnnouncement(announcement)

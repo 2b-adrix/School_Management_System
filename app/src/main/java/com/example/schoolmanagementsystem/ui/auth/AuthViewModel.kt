@@ -34,7 +34,7 @@ class AuthViewModel @Inject constructor(
             _loginState.value = result
             if (result is Resource.Success) {
                 result.data?.let { user ->
-                    sessionManager.saveSession(user.name, user.email, user.role)
+                    sessionManager.saveSession(user.name, user.email, user.role, user.schoolId)
                 }
                 _eventFlow.emit(UiEvent.LoginSuccess)
             } else if (result is Resource.Error) {

@@ -12,5 +12,7 @@ data class Teacher(
     val phoneNumber: String,
     val qualification: String,
     val joinDate: String,
+    val subjects: List<String> = emptyList(),
+    val assignedClasses: List<String> = emptyList(),
     val profileImageUrl: String? = null
 )

@@ -7,6 +7,7 @@ import com.example.schoolmanagementsystem.domain.model.Student
 @Entity(tableName = "students")
 data class StudentEntity(
     @PrimaryKey val id: String,
+    val schoolId: String,
     val firstName: String,
     val lastName: String,
     val rollNumber: String,
@@ -21,6 +22,7 @@ data class StudentEntity(
 
 fun StudentEntity.toDomain() = Student(
     id = id,
+    schoolId = schoolId,
     firstName = firstName,
     lastName = lastName,
     rollNumber = rollNumber,
@@ -35,6 +37,7 @@ fun StudentEntity.toDomain() = Student(
 
 fun Student.toEntity() = StudentEntity(
     id = id,
+    schoolId = schoolId,
     firstName = firstName,
     lastName = lastName,
     rollNumber = rollNumber,

@@ -7,6 +7,10 @@ data class Exam(
     val id: String,
     val schoolId: String,
     val classId: String,
-    val name: String,
-    val date: String
+    val title: String,
+    val description: String? = null,
+    val subjectId: String,
+    val date: String,
+    val totalMarks: Int,
+    val createdBy: String
 )

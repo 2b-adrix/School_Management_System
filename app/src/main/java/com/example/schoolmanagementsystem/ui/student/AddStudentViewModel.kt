@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.student
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Student
+import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.StorageRepository
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddStudentViewModel @Inject constructor(
     private val repository: StudentRepository,
+    private val authRepository: AuthRepository,
     private val storageRepository: StorageRepository
 ) : ViewModel() {
 
@@ -49,6 +52,7 @@ class AddStudentViewModel @Inject constructor(
         viewModelScope.launch {
             _saveState.value = Resource.Loading()
             
+            val user = authRepository.getCurrentUser().firstOrNull()
             var imageUrl: String? = null
             val studentId = UUID.randomUUID().toString()
             
@@ -64,6 +68,7 @@ class AddStudentViewModel @Inject constructor(
 
             val student = Student(
                 id = studentId,
+                schoolId = user?.schoolId ?: "",
                 firstName = firstName,
                 lastName = lastName,
                 rollNumber = rollNumber,

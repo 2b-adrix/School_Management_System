@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.fee
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.FeeStructure
+import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.FeeRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,12 +11,15 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class FeeViewModel @Inject constructor(
-    private val feeRepository: FeeRepository
+    private val feeRepository: FeeRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeeState())
@@ -51,12 +55,16 @@ class FeeViewModel @Inject constructor(
         _state.value = _state.value.copy(selectedTab = index)
     }
 
-    fun addFeeStructure(className: String, amount: String, dueDate: String, description: String) {
+    fun addFeeStructure(classId: String, feeName: String, amount: String, dueDate: String, description: String) {
         viewModelScope.launch {
             _saveState.value = Resource.Loading()
+            val user = authRepository.getCurrentUser().firstOrNull()
+            
             val feeStructure = FeeStructure(
-                id = "",
-                className = className,
+                id = UUID.randomUUID().toString(),
+                schoolId = user?.schoolId ?: "",
+                classId = classId,
+                feeName = feeName,
                 amount = amount.toDoubleOrNull() ?: 0.0,
                 dueDate = dueDate,
                 description = description

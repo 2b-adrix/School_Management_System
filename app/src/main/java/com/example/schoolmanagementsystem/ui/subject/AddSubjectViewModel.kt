@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.subject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolmanagementsystem.domain.model.Subject
+import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.SubjectRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,13 +11,15 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class AddSubjectViewModel @Inject constructor(
-    private val repository: SubjectRepository
+    private val repository: SubjectRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _saveState = MutableStateFlow<Resource<Unit>?>(null)
@@ -33,16 +36,19 @@ class AddSubjectViewModel @Inject constructor(
             return
         }
 
-        val subject = Subject(
-            id = UUID.randomUUID().toString(),
-            name = name,
-            code = code,
-            classId = classId,
-            description = description
-        )
-
         viewModelScope.launch {
             _saveState.value = Resource.Loading()
+            val user = authRepository.getCurrentUser().firstOrNull()
+            
+            val subject = Subject(
+                id = UUID.randomUUID().toString(),
+                schoolId = user?.schoolId ?: "",
+                classId = classId,
+                name = name,
+                code = code,
+                description = description
+            )
+
             val result = repository.addSubject(subject)
             _saveState.value = result
             if (result is Resource.Success) {

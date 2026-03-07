@@ -8,5 +8,7 @@ data class FeeStructure(
     val schoolId: String,
     val classId: String,
     val feeName: String,
-    val amount: Double
+    val amount: Double,
+    val dueDate: String? = null,
+    val description: String? = null
 )

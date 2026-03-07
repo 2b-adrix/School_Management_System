@@ -26,8 +26,6 @@ import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.domain.util.Resource
 import com.example.schoolmanagementsystem.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +49,7 @@ fun ExamScreen(
                     }
                 },
                 actions = {
-                    if (state.user?.role == UserRole.ADMIN || state.user?.role == UserRole.TEACHER) {
+                    if (state.user?.role == UserRole.SCHOOL_ADMIN || state.user?.role == UserRole.TEACHER) {
                         IconButton(onClick = { /* Filter */ }) {
                             Icon(Icons.Rounded.FilterList, contentDescription = "Filter", tint = Color.White)
                         }
@@ -85,7 +83,7 @@ fun ExamScreen(
                                     subjects = state.subjects.data ?: emptyList(),
                                     onExamClick = { examId -> onMarkEntryClick(examId) },
                                     onDeleteClick = { viewModel.deleteExam(it) },
-                                    isTeacherOrAdmin = state.user?.role == UserRole.TEACHER || state.user?.role == UserRole.ADMIN
+                                    isTeacherOrAdmin = state.user?.role == UserRole.TEACHER || state.user?.role == UserRole.SCHOOL_ADMIN
                                 )
                             }
                         }
@@ -109,9 +107,6 @@ fun ExamItemCard(
     isTeacherOrAdmin: Boolean
 ) {
     val subjectName = subjects.find { it.id == exam.subjectId }?.name ?: "Unknown Subject"
-    val formattedDate = remember(exam.date) {
-        SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(exam.date)
-    }
 
     Card(
         modifier = Modifier
@@ -134,7 +129,7 @@ fun ExamItemCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Subject: $subjectName", color = Color.Gray, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Date: $formattedDate", color = Color.Gray, fontSize = 13.sp)
+                    Text("Date: ${exam.date}", color = Color.Gray, fontSize = 13.sp)
                 }
 
                 if (isTeacherOrAdmin) {

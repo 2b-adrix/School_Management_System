@@ -7,6 +7,7 @@ import com.example.schoolmanagementsystem.domain.model.AttendanceRecord
 @Entity(tableName = "attendance")
 data class AttendanceEntity(
     @PrimaryKey val id: String,
+    val schoolId: String,
     val studentId: String,
     val classId: String,
     val subjectId: String,
@@ -16,6 +17,7 @@ data class AttendanceEntity(
 
 fun AttendanceEntity.toDomain() = AttendanceRecord(
     id = id,
+    schoolId = schoolId,
     studentId = studentId,
     classId = classId,
     subjectId = subjectId,
@@ -25,6 +27,7 @@ fun AttendanceEntity.toDomain() = AttendanceRecord(
 
 fun AttendanceRecord.toEntity() = AttendanceEntity(
     id = id,
+    schoolId = schoolId,
     studentId = studentId,
     classId = classId,
     subjectId = subjectId,
