@@ -10,6 +10,7 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import javax.inject.Inject
 
@@ -25,19 +26,19 @@ class AuthRepositoryImpl @Inject constructor(
             }
             val currentUser = supabaseAuth.currentUserOrNull()
             if (currentUser != null) {
-                val roleString = currentUser.userMetadata?.get("role")?.toString()?.uppercase() ?: "STUDENT"
+                val roleString = currentUser.userMetadata?.get("role")?.jsonPrimitive?.content?.uppercase() ?: "STUDENT"
                 val role = try {
                     UserRole.valueOf(roleString)
                 } catch (e: Exception) {
                     UserRole.STUDENT
                 }
                 
-                val schoolId = currentUser.userMetadata?.get("school_id")?.toString() ?: ""
+                val schoolId = currentUser.userMetadata?.get("school_id")?.jsonPrimitive?.content ?: ""
                 
                 Resource.Success(
                     User(
                         id = currentUser.id,
-                        name = currentUser.userMetadata?.get("full_name")?.toString() ?: "User",
+                        name = currentUser.userMetadata?.get("full_name")?.jsonPrimitive?.content ?: "User",
                         email = currentUser.email ?: email,
                         role = role,
                         schoolId = schoolId
@@ -63,18 +64,18 @@ class AuthRepositoryImpl @Inject constructor(
         return supabaseAuth.sessionStatus.map { status ->
             if (status is SessionStatus.Authenticated) {
                 supabaseAuth.currentUserOrNull()?.let { user ->
-                    val roleString = user.userMetadata?.get("role")?.toString()?.uppercase() ?: "STUDENT"
+                    val roleString = user.userMetadata?.get("role")?.jsonPrimitive?.content?.uppercase() ?: "STUDENT"
                     val role = try {
                         UserRole.valueOf(roleString)
                     } catch (e: Exception) {
                         UserRole.STUDENT
                     }
                     
-                    val schoolId = user.userMetadata?.get("school_id")?.toString() ?: ""
+                    val schoolId = user.userMetadata?.get("school_id")?.jsonPrimitive?.content ?: ""
                     
                     User(
                         id = user.id,
-                        name = user.userMetadata?.get("full_name")?.toString() ?: "User",
+                        name = user.userMetadata?.get("full_name")?.jsonPrimitive?.content ?: "User",
                         email = user.email ?: "",
                         role = role,
                         schoolId = schoolId

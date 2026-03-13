@@ -88,6 +88,24 @@ abstract class AppModule {
 
     @Binds
     @Singleton
+    abstract fun bindSalaryRepository(
+        salaryRepositoryImpl: SalaryRepositoryImpl
+    ): SalaryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindInventoryRepository(
+        inventoryRepositoryImpl: InventoryRepositoryImpl
+    ): InventoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMessageRepository(
+        messageRepositoryImpl: MessageRepositoryImpl
+    ): MessageRepository
+
+    @Binds
+    @Singleton
     abstract fun bindPdfService(
         pdfServiceImpl: PdfServiceImpl
     ): PdfService

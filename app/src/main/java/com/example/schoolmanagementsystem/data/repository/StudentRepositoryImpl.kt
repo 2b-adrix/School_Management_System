@@ -61,6 +61,17 @@ class StudentRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun bulkAddStudents(students: List<Student>): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            val studentsWithSchoolId = students.map { it.copy(schoolId = schoolId) }
+            postgrest["students"].insert(studentsWithSchoolId)
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to bulk add students")
+        }
+    }
+
     override suspend fun updateStudent(student: Student): Resource<Unit> {
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""

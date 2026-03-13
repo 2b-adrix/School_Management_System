@@ -7,19 +7,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.domain.model.Exam
+import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.domain.util.Resource
 import com.example.schoolmanagementsystem.ui.components.AppCard
 import com.example.schoolmanagementsystem.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
 import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun ExamListScreen(
@@ -30,9 +34,22 @@ fun ExamListScreen(
     viewModel: ExamListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collectLatest { event ->
+            when (event) {
+                is ExamListViewModel.UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SchoolTopAppBar(
                 title = "Exams",
@@ -40,14 +57,9 @@ fun ExamListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onAddExamClick(classId) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Exam")
-            }
+            // Only show FAB for Admin/Teacher
+            // Note: We need user info in state to check role properly here
+            // For now, let's assume we show it if classId is provided from Admin Portal
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -66,7 +78,14 @@ fun ExamListScreen(
                             items(exams) { exam ->
                                 ExamItem(
                                     exam = exam, 
-                                    onClick = { onMarkEntryClick(exam.id) },
+                                    onActionClick = { 
+                                        // If student, download. If teacher, enter marks.
+                                        // This logic will be improved once role is in state
+                                        onMarkEntryClick(exam.id)
+                                    },
+                                    onDownloadClick = {
+                                        viewModel.downloadReportCard(context, exam.id)
+                                    },
                                     onDelete = { viewModel.deleteExam(exam) }
                                 )
                             }
@@ -83,7 +102,12 @@ fun ExamListScreen(
 }
 
 @Composable
-fun ExamItem(exam: Exam, onClick: () -> Unit, onDelete: () -> Unit) {
+fun ExamItem(
+    exam: Exam, 
+    onActionClick: () -> Unit, 
+    onDownloadClick: () -> Unit,
+    onDelete: () -> Unit
+) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     if (showDeleteConfirm) {
@@ -107,7 +131,7 @@ fun ExamItem(exam: Exam, onClick: () -> Unit, onDelete: () -> Unit) {
         )
     }
 
-    AppCard(onClick = onClick) {
+    AppCard(onClick = onActionClick) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,12 +154,22 @@ fun ExamItem(exam: Exam, onClick: () -> Unit, onDelete: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            IconButton(onClick = { showDeleteConfirm = true }) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
-                )
+            
+            Row {
+                IconButton(onClick = onDownloadClick) {
+                    Icon(
+                        imageVector = Icons.Rounded.Download,
+                        contentDescription = "Download Report Card",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = { showDeleteConfirm = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }

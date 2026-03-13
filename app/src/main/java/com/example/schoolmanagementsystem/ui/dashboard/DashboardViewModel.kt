@@ -9,15 +9,10 @@ import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.repository.ClassRepository
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.repository.TeacherRepository
+import com.example.schoolmanagementsystem.domain.repository.FeeRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +22,8 @@ class DashboardViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val teacherRepository: TeacherRepository,
     private val classRepository: ClassRepository,
-    private val announcementRepository: AnnouncementRepository
+    private val announcementRepository: AnnouncementRepository,
+    private val feeRepository: FeeRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardState())
@@ -47,20 +43,47 @@ class DashboardViewModel @Inject constructor(
             .onEach { user ->
                 if (user == null) {
                     _eventFlow.emit(UiEvent.LogoutSuccess)
-                }
-                _state.value = _state.value.copy(
-                    user = user,
-                    userName = user?.name ?: "User",
-                    userSubtitle = when(user?.role) {
-                        UserRole.SUPER_ADMIN -> "Super Admin"
-                        UserRole.SCHOOL_ADMIN -> "Principal"
-                        UserRole.TEACHER -> "Teacher"
-                        UserRole.STUDENT -> "Student"
-                        null -> ""
+                } else {
+                    _state.update { it.copy(
+                        user = user,
+                        userName = user.name,
+                        userSubtitle = when(user.role) {
+                            UserRole.SUPER_ADMIN -> "Super Admin"
+                            UserRole.SCHOOL_ADMIN -> "Principal"
+                            UserRole.TEACHER -> "Teacher"
+                            UserRole.STUDENT -> "Student"
+                        }
+                    ) }
+                    
+                    if (user.role == UserRole.STUDENT) {
+                        loadStudentData(user.id)
                     }
-                )
+                }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun loadStudentData(studentId: String) {
+        viewModelScope.launch {
+            // Get student profile for classId
+            val studentRes = studentRepository.getStudentById(studentId)
+            if (studentRes is Resource.Success) {
+                _state.update { it.copy(studentClassId = studentRes.data?.classId ?: "") }
+            }
+
+            // Calculate fees due
+            combine(
+                feeRepository.getFeeStructures(),
+                feeRepository.getPaymentsByStudent(studentId)
+            ) { structuresRes, paymentsRes ->
+                if (structuresRes is Resource.Success && paymentsRes is Resource.Success) {
+                    val totalTarget = structuresRes.data?.filter { it.classId == _state.value.studentClassId }?.sumOf { it.amount } ?: 0.0
+                    val totalPaid = paymentsRes.data?.sumOf { it.amountPaid } ?: 0.0
+                    val due = totalTarget - totalPaid
+                    _state.update { it.copy(feeDuesAmount = due) }
+                }
+            }.launchIn(viewModelScope)
+        }
     }
 
     private fun loadStats() {
@@ -73,12 +96,12 @@ class DashboardViewModel @Inject constructor(
             val teacherCount = if (teachers is Resource.Success) teachers.data?.size ?: 0 else 0
             val classCount = if (classes is Resource.Success) classes.data?.size ?: 0 else 0
             
-            _state.value = _state.value.copy(
+            _state.update { it.copy(
                 studentCount = studentCount,
                 teacherCount = teacherCount,
                 classCount = classCount,
                 isLoading = false
-            )
+            ) }
         }.launchIn(viewModelScope)
     }
 
@@ -88,7 +111,7 @@ class DashboardViewModel @Inject constructor(
                 val notices = result.data?.take(5)?.map { 
                     Notice(it.title, it.content, it.createdAt)
                 } ?: emptyList()
-                _state.value = _state.value.copy(notices = notices)
+                _state.update { it.copy(notices = notices) }
             }
         }.launchIn(viewModelScope)
     }
@@ -107,10 +130,9 @@ class DashboardViewModel @Inject constructor(
         val classCount: Int = 0,
         val userName: String = "Loading...",
         val userSubtitle: String = "",
-        val feeDues: String = "3 dues",
-        val timetableClasses: String = "8 classes",
-        val eventsCount: String = "22 events",
-        val notices: List<Notice> = emptyList()
+        val notices: List<Notice> = emptyList(),
+        val studentClassId: String = "",
+        val feeDuesAmount: Double = 0.0
     )
 
     data class Notice(

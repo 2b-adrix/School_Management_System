@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,13 +26,15 @@ fun StudentDetailScreen(
     viewModel: StudentDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is StudentDetailViewModel.UiEvent.DeleteSuccess -> onNavigateBack()
                 is StudentDetailViewModel.UiEvent.ShowSnackbar -> {
-                    // Show snackbar
+                    snackbarHostState.showSnackbar(event.message)
                 }
             }
         }
@@ -39,11 +42,19 @@ fun StudentDetailScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SchoolTopAppBar(
                 title = "Student Profile",
                 onBackClick = onNavigateBack,
                 actions = {
+                    IconButton(onClick = { viewModel.downloadProfile(context) }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = "Download PDF",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(onClick = { viewModel.deleteStudent() }) {
                         Icon(
                             imageVector = Icons.Default.Delete,

@@ -12,6 +12,7 @@ sealed class Screen(val route: String) {
     object StudentDetail : Screen("student_detail/{studentId}") {
         fun createRoute(studentId: String) = "student_detail/$studentId"
     }
+    object BulkImportStudent : Screen("bulk_import_student")
 
     // Teacher Management
     object TeacherList : Screen("teacher_list")
@@ -19,6 +20,7 @@ sealed class Screen(val route: String) {
     object TeacherDetail : Screen("teacher_detail/{teacherId}") {
         fun createRoute(teacherId: String) = "teacher_detail/$teacherId"
     }
+    object TeacherSalary : Screen("teacher_salary")
 
     // Class Management
     object ClassList : Screen("class_list")
@@ -33,6 +35,8 @@ sealed class Screen(val route: String) {
     object AttendanceMark : Screen("attendance_mark/{classId}/{subjectId}/{date}") {
         fun createRoute(classId: String, subjectId: String, date: String) = "attendance_mark/$classId/$subjectId/$date"
     }
+    object AttendanceReport : Screen("attendance_report")
+    object AttendanceHistory : Screen("attendance_history")
 
     // Exams & Results
     object ExamClassSelect : Screen("exam_class_select")
@@ -68,14 +72,22 @@ sealed class Screen(val route: String) {
     object NotificationList : Screen("notification_list")
     object AddNotification : Screen("add_notification")
 
-    // New Screens from Reference
+    // Library & Inventory
+    object Library : Screen("library")
+    object LibrarySearch : Screen("library_search")
+    object Inventory : Screen("inventory")
+
+    // Messaging
     object Messages : Screen("messages")
+    object ChatDetail : Screen("chat_detail/{receiverId}/{receiverName}") {
+        fun createRoute(receiverId: String, receiverName: String) = "chat_detail/$receiverId/$receiverName"
+    }
+
+    // New Screens from Reference
     object MyClass : Screen("my_class")
     object Events : Screen("events")
     object Me : Screen("me")
     object Profile : Screen("profile")
     object Gallery : Screen("gallery")
     object Assignments : Screen("assignments")
-    object Library : Screen("library")
-    object LibrarySearch : Screen("library_search")
 }

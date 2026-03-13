@@ -2,12 +2,17 @@ package com.example.schoolmanagementsystem.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +29,10 @@ import com.example.schoolmanagementsystem.domain.util.Resource
 import com.example.schoolmanagementsystem.ui.theme.spacing
 import kotlinx.coroutines.flow.collectLatest
 
+enum class LoginType {
+    STUDENT, TEACHER, ADMIN
+}
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -32,6 +41,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var loginType by remember { mutableStateOf(LoginType.STUDENT) }
+    
     val loginState by viewModel.loginState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -57,7 +68,11 @@ fun LoginScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            when(loginType) {
+                                LoginType.STUDENT -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                LoginType.TEACHER -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                                LoginType.ADMIN -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                            },
                             MaterialTheme.colorScheme.background
                         )
                     )
@@ -66,7 +81,8 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(spacing().spacing6),
+                    .padding(spacing().spacing6)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -74,11 +90,19 @@ fun LoginScreen(
                 Surface(
                     modifier = Modifier.size(80.dp),
                     shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.primary
+                    color = when(loginType) {
+                        LoginType.STUDENT -> MaterialTheme.colorScheme.primary
+                        LoginType.TEACHER -> MaterialTheme.colorScheme.tertiary
+                        LoginType.ADMIN -> MaterialTheme.colorScheme.secondary
+                    }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Default.Lock,
+                            imageVector = when(loginType) {
+                                LoginType.STUDENT -> Icons.Default.School
+                                LoginType.TEACHER -> Icons.Default.Person
+                                LoginType.ADMIN -> Icons.Default.AdminPanelSettings
+                            },
                             contentDescription = null,
                             modifier = Modifier.size(40.dp),
                             tint = MaterialTheme.colorScheme.onPrimary
@@ -89,7 +113,11 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(spacing().spacing6))
 
                 Text(
-                    text = "Welcome Back",
+                    text = when(loginType) {
+                        LoginType.STUDENT -> "Student Login"
+                        LoginType.TEACHER -> "Teacher Login"
+                        LoginType.ADMIN -> "Admin Login"
+                    },
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -97,7 +125,11 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Login to manage your school",
+                    text = when(loginType) {
+                        LoginType.STUDENT -> "Access your learning dashboard"
+                        LoginType.TEACHER -> "Manage your classes and students"
+                        LoginType.ADMIN -> "System administration portal"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -111,11 +143,7 @@ fun LoginScreen(
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
+                    singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(spacing().spacing4))
@@ -136,11 +164,7 @@ fun LoginScreen(
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
+                    singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(spacing().spacing2))
@@ -152,7 +176,11 @@ fun LoginScreen(
                     Text(
                         "Forgot Password?",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        color = when(loginType) {
+                            LoginType.STUDENT -> MaterialTheme.colorScheme.primary
+                            LoginType.TEACHER -> MaterialTheme.colorScheme.tertiary
+                            LoginType.ADMIN -> MaterialTheme.colorScheme.secondary
+                        }
                     )
                 }
 
@@ -165,7 +193,13 @@ fun LoginScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
                     enabled = loginState !is Resource.Loading,
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = when(loginType) {
+                            LoginType.STUDENT -> MaterialTheme.colorScheme.primary
+                            LoginType.TEACHER -> MaterialTheme.colorScheme.tertiary
+                            LoginType.ADMIN -> MaterialTheme.colorScheme.secondary
+                        }
+                    )
                 ) {
                     if (loginState is Resource.Loading) {
                         CircularProgressIndicator(
@@ -178,6 +212,24 @@ fun LoginScreen(
                             "Login",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(spacing().spacing4))
+
+                // Role Selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    TextButton(onClick = { loginType = LoginType.STUDENT }) {
+                        Text("Student", color = if(loginType == LoginType.STUDENT) MaterialTheme.colorScheme.primary else Color.Gray)
+                    }
+                    TextButton(onClick = { loginType = LoginType.TEACHER }) {
+                        Text("Teacher", color = if(loginType == LoginType.TEACHER) MaterialTheme.colorScheme.tertiary else Color.Gray)
+                    }
+                    TextButton(onClick = { loginType = LoginType.ADMIN }) {
+                        Text("Admin", color = if(loginType == LoginType.ADMIN) MaterialTheme.colorScheme.secondary else Color.Gray)
                     }
                 }
             }

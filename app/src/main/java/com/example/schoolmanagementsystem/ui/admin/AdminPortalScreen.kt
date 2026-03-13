@@ -127,7 +127,8 @@ fun AdminModuleCard(module: AdminModule, onClick: () -> Unit) {
             Text(
                 text = module.title,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }
@@ -148,5 +149,7 @@ val adminModules = listOf(
     AdminModule("Exams", Icons.Rounded.Assignment, Color(0xFFF44336), Screen.ExamClassSelect.route),
     AdminModule("Fees", Icons.Rounded.AccountBalanceWallet, Color(0xFF607D8B), Screen.FeeList.route),
     AdminModule("Announcements", Icons.AutoMirrored.Rounded.VolumeUp, Color(0xFFE91E63), Screen.NotificationList.route),
-    AdminModule("Timetable", Icons.Rounded.CalendarToday, Color(0xFF3F51B5), Screen.ClassList.route)
+    AdminModule("Attendance Report", Icons.Rounded.Assessment, Color(0xFF009688), Screen.AttendanceReport.route),
+    AdminModule("Teacher Salary", Icons.Rounded.Payments, Color(0xFF795548), Screen.TeacherSalary.route),
+    AdminModule("Inventory", Icons.Rounded.Inventory, Color(0xFFCDDC39), Screen.Inventory.route)
 )

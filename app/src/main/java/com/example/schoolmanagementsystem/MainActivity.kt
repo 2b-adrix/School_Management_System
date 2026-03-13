@@ -19,6 +19,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.schoolmanagementsystem.ui.admin.AdminPortalScreen
+import com.example.schoolmanagementsystem.ui.admin.AttendanceReportScreen
+import com.example.schoolmanagementsystem.ui.admin.InventoryScreen
+import com.example.schoolmanagementsystem.ui.admin.TeacherSalaryScreen
 import com.example.schoolmanagementsystem.ui.assignment.AssignmentScreen
 import com.example.schoolmanagementsystem.ui.attendance.AttendanceClassSelectScreen
 import com.example.schoolmanagementsystem.ui.attendance.AttendanceMarkScreen
@@ -46,6 +49,7 @@ import com.example.schoolmanagementsystem.ui.splash.SplashScreen
 import com.example.schoolmanagementsystem.ui.student.AddStudentScreen
 import com.example.schoolmanagementsystem.ui.student.StudentDetailScreen
 import com.example.schoolmanagementsystem.ui.student.StudentListScreen
+import com.example.schoolmanagementsystem.ui.student.StudentAttendanceScreen
 import com.example.schoolmanagementsystem.ui.subject.AddSubjectScreen
 import com.example.schoolmanagementsystem.ui.subject.SubjectListScreen
 import com.example.schoolmanagementsystem.ui.teacher.AddTeacherScreen
@@ -55,6 +59,7 @@ import com.example.schoolmanagementsystem.ui.timetable.AddTimetableEntryScreen
 import com.example.schoolmanagementsystem.ui.timetable.TimetableListScreen
 import com.example.schoolmanagementsystem.ui.timetable.TimetableScreen
 import com.example.schoolmanagementsystem.ui.theme.SchoolManagementSystemTheme
+import com.example.schoolmanagementsystem.ui.message.ChatDetailScreen
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
@@ -134,6 +139,17 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     
+                    // Admin Specific Modules
+                    composable(Screen.TeacherSalary.route) {
+                        TeacherSalaryScreen(onNavigateBack = { navController.popBackStack() })
+                    }
+                    composable(Screen.AttendanceReport.route) {
+                        AttendanceReportScreen(onNavigateBack = { navController.popBackStack() })
+                    }
+                    composable(Screen.Inventory.route) {
+                        InventoryScreen(onNavigateBack = { navController.popBackStack() })
+                    }
+                    
                     // Profile & Me
                     composable(Screen.Me.route) {
                         MeScreen(
@@ -157,7 +173,18 @@ class MainActivity : ComponentActivity() {
 
                     // Messages
                     composable(Screen.Messages.route) {
-                        MessagesScreen(onNavigate = { route -> navController.navigate(route) })
+                        MessagesScreen(onNavigate = { route ->
+                            navController.navigate(route)
+                        })
+                    }
+                    composable(
+                        route = Screen.ChatDetail.route,
+                        arguments = listOf(
+                            navArgument("receiverId") { type = NavType.StringType },
+                            navArgument("receiverName") { type = NavType.StringType }
+                        )
+                    ) { backStackEntry ->
+                        ChatDetailScreen(onNavigateBack = { navController.popBackStack() })
                     }
 
                     // Gallery
@@ -263,7 +290,6 @@ class MainActivity : ComponentActivity() {
                         ClassListScreen(
                             onAddClassClick = { navController.navigate(Screen.AddClass.route) },
                             onClassClick = { classId ->
-                                // For admin, maybe show class details or timetable management
                                 navController.navigate(Screen.TimetableList.createRoute(classId))
                             },
                             onNavigateBack = { navController.popBackStack() }
@@ -302,6 +328,9 @@ class MainActivity : ComponentActivity() {
                         )
                     ) {
                         AttendanceMarkScreen(onNavigateBack = { navController.popBackStack() })
+                    }
+                    composable(Screen.AttendanceHistory.route) {
+                        StudentAttendanceScreen(onNavigateBack = { navController.popBackStack() })
                     }
 
                     // Exams & Results
