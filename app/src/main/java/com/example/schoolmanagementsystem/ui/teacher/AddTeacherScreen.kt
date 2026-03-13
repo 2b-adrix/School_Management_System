@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
@@ -33,7 +34,10 @@ fun AddTeacherScreen(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
+    var qualification by remember { mutableStateOf("") }
+    var joinDate by remember { mutableStateOf("") }
     var subjects by remember { mutableStateOf("") }
     var assignedClasses by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -129,9 +133,28 @@ fun AddTeacherScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password *") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation()
+            )
+            OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = { phoneNumber = it },
                 label = { Text("Phone Number") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = qualification,
+                onValueChange = { qualification = it },
+                label = { Text("Qualification") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = joinDate,
+                onValueChange = { joinDate = it },
+                label = { Text("Join Date") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
@@ -153,7 +176,16 @@ fun AddTeacherScreen(
                         context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                     }
                     viewModel.saveTeacher(
-                        firstName, lastName, email, phoneNumber, subjects, assignedClasses, bytes
+                        firstName = firstName,
+                        lastName = lastName,
+                        email = email,
+                        password = password,
+                        phoneNumber = phoneNumber,
+                        qualification = qualification,
+                        joinDate = joinDate,
+                        subjects = subjects,
+                        assignedClasses = assignedClasses,
+                        imageBytes = bytes
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

@@ -42,6 +42,7 @@ import com.example.schoolmanagementsystem.ui.notification.NotificationListScreen
 import com.example.schoolmanagementsystem.ui.profile.ProfileScreen
 import com.example.schoolmanagementsystem.ui.schoolclass.AddClassScreen
 import com.example.schoolmanagementsystem.ui.schoolclass.ClassListScreen
+import com.example.schoolmanagementsystem.ui.splash.SplashScreen
 import com.example.schoolmanagementsystem.ui.student.AddStudentScreen
 import com.example.schoolmanagementsystem.ui.student.StudentDetailScreen
 import com.example.schoolmanagementsystem.ui.student.StudentListScreen
@@ -85,9 +86,24 @@ class MainActivity : ComponentActivity() {
                 
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Login.route,
+                    startDestination = Screen.Splash.route,
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    composable(Screen.Splash.route) {
+                        SplashScreen(
+                            onNavigateToLogin = {
+                                navController.navigate(Screen.Login.route) {
+                                    popUpTo(Screen.Splash.route) { inclusive = true }
+                                }
+                            },
+                            onNavigateToDashboard = {
+                                navController.navigate(Screen.Dashboard.route) {
+                                    popUpTo(Screen.Splash.route) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
                     composable(Screen.Login.route) {
                         LoginScreen(
                             onLoginSuccess = {

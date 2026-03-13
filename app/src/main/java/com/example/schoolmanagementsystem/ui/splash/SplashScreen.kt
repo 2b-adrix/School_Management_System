@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.ui.auth.AuthViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 
 @Composable
@@ -31,6 +31,7 @@ fun SplashScreen(
     val scale = remember { Animatable(0f) }
 
     LaunchedEffect(key1 = true) {
+        // 1. Start Animation
         scale.animateTo(
             targetValue = 1f,
             animationSpec = tween(
@@ -39,11 +40,13 @@ fun SplashScreen(
             )
         )
         
-        // Check current session
-        val user = viewModel.currentUser.value
-        delay(1000L)
+        // 2. Guaranteed delay so user sees the logo (Minimum 2 seconds)
+        delay(2000L)
         
-        if (user != null) {
+        // 3. Check Session
+        val currentUser = viewModel.currentUser.value
+        
+        if (currentUser != null) {
             onNavigateToDashboard()
         } else {
             onNavigateToLogin()
@@ -89,7 +92,6 @@ fun SplashScreen(
     }
 }
 
-// Simple OvershootInterpolator helper
 class OvershootInterpolator(private val tension: Float) {
     fun getInterpolation(t: Float): Float {
         var tVar = t
