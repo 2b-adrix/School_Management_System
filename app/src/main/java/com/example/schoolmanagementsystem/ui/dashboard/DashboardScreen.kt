@@ -178,13 +178,20 @@ fun DashboardScreen(
         ) { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 when (state.user?.role) {
-                    UserRole.SCHOOL_ADMIN -> AdminDashboard(state, onNavigate)
+                    UserRole.SUPER_ADMIN, UserRole.SCHOOL_ADMIN -> AdminDashboard(state, onNavigate)
                     UserRole.TEACHER -> TeacherDashboard(onNavigate)
                     UserRole.STUDENT -> StudentDashboard(state, onNavigate)
-                    else -> LoadingScreen()
+                    else -> if (state.isLoading) LoadingScreen() else EmptyDashboard()
                 }
             }
         }
+    }
+}
+
+@Composable
+fun EmptyDashboard() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("No data available for your role.")
     }
 }
 
@@ -251,7 +258,7 @@ fun StudentDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Fees Due", style = MaterialTheme.typography.labelLarge)
-                        Text("$ 1,200", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+                        Text("$ ${state.feeDuesAmount}", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = { onNavigate(Screen.FeeList.route) },
