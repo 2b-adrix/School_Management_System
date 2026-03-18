@@ -1,5 +1,6 @@
 package com.example.schoolmanagementsystem.data.repository
 
+import com.example.schoolmanagementsystem.data.manager.SessionManager
 import com.example.schoolmanagementsystem.domain.model.User
 import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.domain.repository.AuthRepository
@@ -15,7 +16,8 @@ import kotlinx.serialization.json.put
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val supabaseAuth: Auth
+    private val supabaseAuth: Auth,
+    private val sessionManager: SessionManager
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Resource<User> {
@@ -34,11 +36,14 @@ class AuthRepositoryImpl @Inject constructor(
                 }
                 
                 val schoolId = currentUser.userMetadata?.get("school_id")?.jsonPrimitive?.content ?: ""
+                val name = currentUser.userMetadata?.get("full_name")?.jsonPrimitive?.content ?: "User"
+
+                sessionManager.saveSession(name, currentUser.email ?: email, role, schoolId)
                 
                 Resource.Success(
                     User(
                         id = currentUser.id,
-                        name = currentUser.userMetadata?.get("full_name")?.jsonPrimitive?.content ?: "User",
+                        name = name,
                         email = currentUser.email ?: email,
                         role = role,
                         schoolId = schoolId
@@ -55,6 +60,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout() {
         try {
             supabaseAuth.signOut()
+            sessionManager.clearSession()
         } catch (e: Exception) {
             e.printStackTrace()
         }

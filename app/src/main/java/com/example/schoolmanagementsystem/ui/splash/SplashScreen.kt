@@ -19,8 +19,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.ui.auth.AuthViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 
 @Composable
 fun SplashScreen(
@@ -29,6 +27,7 @@ fun SplashScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val scale = remember { Animatable(0f) }
+    val currentUser by viewModel.currentUser.collectAsState()
 
     LaunchedEffect(key1 = true) {
         // 1. Start Animation
@@ -40,12 +39,10 @@ fun SplashScreen(
             )
         )
         
-        // 2. Guaranteed delay so user sees the logo (Minimum 2 seconds)
-        delay(2000L)
+        // 2. Guaranteed delay so user sees the logo
+        delay(1500L)
         
         // 3. Check Session
-        val currentUser = viewModel.currentUser.value
-        
         if (currentUser != null) {
             onNavigateToDashboard()
         } else {
