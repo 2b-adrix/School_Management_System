@@ -22,7 +22,7 @@ class SalaryRepositoryImpl @Inject constructor(
             val salaries = postgrest["salaries"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                     }
                 }
                 .decodeList<SalaryRecord>()
@@ -39,8 +39,8 @@ class SalaryRepositoryImpl @Inject constructor(
             val salaries = postgrest["salaries"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("teacherId", teacherId)
+                        eq("school_id", schoolId ?: "")
+                        eq("teacher_id", teacherId)
                     }
                 }
                 .decodeList<SalaryRecord>()
@@ -68,7 +68,7 @@ class SalaryRepositoryImpl @Inject constructor(
             }) {
                 filter {
                     eq("id", salaryId)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -83,7 +83,7 @@ class SalaryRepositoryImpl @Inject constructor(
             postgrest["salaries"].delete {
                 filter {
                     eq("id", salaryId)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

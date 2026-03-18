@@ -22,7 +22,7 @@ class TeacherRepositoryImpl @Inject constructor(
             val teachers = postgrest["teachers"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                     }
                 }
                 .decodeList<Teacher>()
@@ -39,7 +39,7 @@ class TeacherRepositoryImpl @Inject constructor(
                 .select {
                     filter {
                         eq("id", id)
-                        eq("schoolId", schoolId)
+                        eq("school_id", schoolId)
                     }
                 }
                 .decodeSingle<Teacher>()
@@ -66,7 +66,7 @@ class TeacherRepositoryImpl @Inject constructor(
             postgrest["teachers"].update(teacher.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", teacher.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -81,7 +81,7 @@ class TeacherRepositoryImpl @Inject constructor(
             postgrest["teachers"].delete {
                 filter {
                     eq("id", teacher.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

@@ -22,10 +22,10 @@ class MessageRepositoryImpl @Inject constructor(
             val messages = postgrest["messages"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                         or {
-                            eq("senderId", userId)
-                            eq("receiverId", userId)
+                            eq("sender_id", userId)
+                            eq("receiver_id", userId)
                         }
                     }
                 }
@@ -43,15 +43,15 @@ class MessageRepositoryImpl @Inject constructor(
             val messages = postgrest["messages"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                         or {
                             and {
-                                eq("senderId", senderId)
-                                eq("receiverId", receiverId)
+                                eq("sender_id", senderId)
+                                eq("receiver_id", receiverId)
                             }
                             and {
-                                eq("senderId", receiverId)
-                                eq("receiverId", senderId)
+                                eq("sender_id", receiverId)
+                                eq("receiver_id", senderId)
                             }
                         }
                     }
@@ -77,11 +77,11 @@ class MessageRepositoryImpl @Inject constructor(
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["messages"].update({
-                set("isRead", true)
+                set("is_read", true)
             }) {
                 filter {
                     eq("id", messageId)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

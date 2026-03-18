@@ -22,7 +22,7 @@ class InventoryRepositoryImpl @Inject constructor(
             val items = postgrest["inventory"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                     }
                 }
                 .decodeList<InventoryItem>()
@@ -48,7 +48,7 @@ class InventoryRepositoryImpl @Inject constructor(
             postgrest["inventory"].update(item.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", item.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -63,7 +63,7 @@ class InventoryRepositoryImpl @Inject constructor(
             postgrest["inventory"].delete {
                 filter {
                     eq("id", itemId)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

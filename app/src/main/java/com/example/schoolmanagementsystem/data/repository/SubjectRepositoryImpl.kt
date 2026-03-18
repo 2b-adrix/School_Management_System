@@ -21,7 +21,7 @@ class SubjectRepositoryImpl @Inject constructor(
             val subjects = postgrest["subjects"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                     }
                 }
                 .decodeList<Subject>()
@@ -38,7 +38,7 @@ class SubjectRepositoryImpl @Inject constructor(
                 .select {
                     filter {
                         eq("id", id)
-                        eq("schoolId", schoolId)
+                        eq("school_id", schoolId)
                     }
                 }
                 .decodeSingle<Subject>()
@@ -65,7 +65,7 @@ class SubjectRepositoryImpl @Inject constructor(
             postgrest["subjects"].update(subject.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", subject.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -80,7 +80,7 @@ class SubjectRepositoryImpl @Inject constructor(
             postgrest["subjects"].delete {
                 filter {
                     eq("id", subject.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

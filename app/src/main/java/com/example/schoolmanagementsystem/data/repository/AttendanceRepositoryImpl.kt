@@ -22,9 +22,9 @@ class AttendanceRepositoryImpl @Inject constructor(
             val attendance = postgrest["attendance"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("classId", classId)
-                        eq("subjectId", subjectId)
+                        eq("school_id", schoolId ?: "")
+                        eq("class_id", classId)
+                        eq("subject_id", subjectId)
                         eq("date", date)
                     }
                 }
@@ -53,8 +53,8 @@ class AttendanceRepositoryImpl @Inject constructor(
             val attendance = postgrest["attendance"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("studentId", studentId)
+                        eq("school_id", schoolId ?: "")
+                        eq("student_id", studentId)
                     }
                 }
                 .decodeList<AttendanceRecord>()

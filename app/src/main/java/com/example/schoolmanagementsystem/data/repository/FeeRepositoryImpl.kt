@@ -23,7 +23,7 @@ class FeeRepositoryImpl @Inject constructor(
             val structures = postgrest["fee_structures"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                     }
                 }
                 .decodeList<FeeStructure>()
@@ -50,7 +50,7 @@ class FeeRepositoryImpl @Inject constructor(
             postgrest["fee_structures"].update(feeStructure.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", feeStructure.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -65,7 +65,7 @@ class FeeRepositoryImpl @Inject constructor(
             postgrest["fee_structures"].delete {
                 filter {
                     eq("id", feeStructure.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -81,8 +81,8 @@ class FeeRepositoryImpl @Inject constructor(
             val payments = postgrest["fee_payments"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("studentId", studentId)
+                        eq("school_id", schoolId ?: "")
+                        eq("student_id", studentId)
                     }
                 }
                 .decodeList<FeePayment>()
@@ -109,7 +109,7 @@ class FeeRepositoryImpl @Inject constructor(
             postgrest["fee_payments"].delete {
                 filter {
                     eq("id", payment.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

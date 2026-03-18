@@ -22,7 +22,7 @@ class AnnouncementRepositoryImpl @Inject constructor(
             val announcements = postgrest["announcements"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                     }
                 }
                 .decodeList<Announcement>()
@@ -40,11 +40,11 @@ class AnnouncementRepositoryImpl @Inject constructor(
             val announcements = postgrest["announcements"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
+                        eq("school_id", schoolId ?: "")
                         or {
-                            eq("targetRole", "ALL")
-                            eq("targetRole", "STUDENT")
-                            eq("targetClassId", classId)
+                            eq("target_role", "ALL")
+                            eq("target_role", "STUDENT")
+                            eq("target_id", classId)
                         }
                     }
                 }
@@ -72,7 +72,7 @@ class AnnouncementRepositoryImpl @Inject constructor(
             postgrest["announcements"].update(announcement.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", announcement.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -87,7 +87,7 @@ class AnnouncementRepositoryImpl @Inject constructor(
             postgrest["announcements"].delete {
                 filter {
                     eq("id", id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)

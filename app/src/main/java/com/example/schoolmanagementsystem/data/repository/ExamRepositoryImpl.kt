@@ -23,8 +23,8 @@ class ExamRepositoryImpl @Inject constructor(
             val exams = postgrest["exams"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("classId", classId)
+                        eq("school_id", schoolId ?: "")
+                        eq("class_id", classId)
                     }
                 }
                 .decodeList<Exam>()
@@ -51,7 +51,7 @@ class ExamRepositoryImpl @Inject constructor(
             postgrest["exams"].update(exam.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", exam.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -66,7 +66,7 @@ class ExamRepositoryImpl @Inject constructor(
             postgrest["exams"].delete {
                 filter {
                     eq("id", exam.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -82,8 +82,8 @@ class ExamRepositoryImpl @Inject constructor(
             val results = postgrest["results"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("examId", examId)
+                        eq("school_id", schoolId ?: "")
+                        eq("exam_id", examId)
                     }
                 }
                 .decodeList<Result>()
@@ -111,8 +111,8 @@ class ExamRepositoryImpl @Inject constructor(
             val results = postgrest["results"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("studentId", studentId)
+                        eq("school_id", schoolId ?: "")
+                        eq("student_id", studentId)
                     }
                 }
                 .decodeList<Result>()
