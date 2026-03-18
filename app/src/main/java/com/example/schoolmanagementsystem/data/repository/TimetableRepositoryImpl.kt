@@ -22,8 +22,8 @@ class TimetableRepositoryImpl @Inject constructor(
             val timetable = postgrest["timetable"]
                 .select {
                     filter {
-                        eq("schoolId", schoolId ?: "")
-                        eq("classId", classId)
+                        eq("school_id", schoolId ?: "")
+                        eq("class_id", classId)
                     }
                 }
                 .decodeList<TimetableEntry>()
@@ -50,7 +50,7 @@ class TimetableRepositoryImpl @Inject constructor(
             postgrest["timetable"].update(entry.copy(schoolId = schoolId)) {
                 filter {
                     eq("id", entry.id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
@@ -65,7 +65,7 @@ class TimetableRepositoryImpl @Inject constructor(
             postgrest["timetable"].delete {
                 filter {
                     eq("id", id)
-                    eq("schoolId", schoolId)
+                    eq("school_id", schoolId)
                 }
             }
             Resource.Success(Unit)
