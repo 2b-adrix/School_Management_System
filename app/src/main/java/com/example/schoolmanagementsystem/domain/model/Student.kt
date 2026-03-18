@@ -28,5 +28,7 @@ data class Student(
     @SerialName("date_of_birth")
     val dateOfBirth: String,
     @SerialName("profile_image_url")
-    val profileImageUrl: String? = null
+    val profileImageUrl: String? = null,
+    @SerialName("face_embedding")
+    val faceEmbedding: List<Float>? = null
 )

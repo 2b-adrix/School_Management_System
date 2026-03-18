@@ -1,8 +1,10 @@
 package com.example.schoolmanagementsystem.di
 
 import com.example.schoolmanagementsystem.data.repository.*
+import com.example.schoolmanagementsystem.data.service.AttendanceAIServiceImpl
 import com.example.schoolmanagementsystem.data.service.PdfServiceImpl
 import com.example.schoolmanagementsystem.domain.repository.*
+import com.example.schoolmanagementsystem.domain.service.AttendanceAIService
 import com.example.schoolmanagementsystem.domain.service.PdfService
 import dagger.Binds
 import dagger.Module
@@ -109,4 +111,10 @@ abstract class AppModule {
     abstract fun bindPdfService(
         pdfServiceImpl: PdfServiceImpl
     ): PdfService
+
+    @Binds
+    @Singleton
+    abstract fun bindAttendanceAIService(
+        attendanceAIServiceImpl: AttendanceAIServiceImpl
+    ): AttendanceAIService
 }

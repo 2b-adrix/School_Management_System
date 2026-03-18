@@ -105,6 +105,17 @@ dependencies {
     implementation(libs.coil.network)
     implementation(libs.openpdf)
 
+    // AI & ML Kit
+    implementation(libs.mlkit.face.detection)
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.google.ai.client)
+
+    // CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
