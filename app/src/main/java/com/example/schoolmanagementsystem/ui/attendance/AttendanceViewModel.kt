@@ -1,28 +1,17 @@
 package com.example.schoolmanagementsystem.ui.attendance
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.schoolmanagementsystem.domain.model.AttendanceRecord
-import com.example.schoolmanagementsystem.domain.model.SchoolClass
-import com.example.schoolmanagementsystem.domain.model.Student
-import com.example.schoolmanagementsystem.domain.model.Subject
-import com.example.schoolmanagementsystem.domain.model.User
-import com.example.schoolmanagementsystem.domain.repository.AttendanceRepository
-import com.example.schoolmanagementsystem.domain.repository.AuthRepository
-import com.example.schoolmanagementsystem.domain.repository.ClassRepository
-import com.example.schoolmanagementsystem.domain.repository.StudentRepository
-import com.example.schoolmanagementsystem.domain.repository.SubjectRepository
+import com.example.schoolmanagementsystem.domain.model.*
+import com.example.schoolmanagementsystem.domain.repository.*
+import com.example.schoolmanagementsystem.domain.service.AttendanceAIService
 import com.example.schoolmanagementsystem.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Date
-import java.util.UUID
+import java.io.File
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,7 +20,8 @@ class AttendanceViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val subjectRepository: SubjectRepository,
     private val classRepository: ClassRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val aiService: AttendanceAIService
 ) : ViewModel() {
     private val _state = MutableStateFlow(AttendanceState())
     val state = _state.asStateFlow()
@@ -86,7 +76,7 @@ class AttendanceViewModel @Inject constructor(
                                 studentId = student.id,
                                 classId = classId,
                                 subjectId = _state.value.selectedSubjectId,
-                                date = _state.value.selectedDate.toString(), // Simplified date string
+                                date = _state.value.selectedDate.toString(),
                                 isPresent = false
                             )
                         }
@@ -104,6 +94,65 @@ class AttendanceViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    // --- AI Integration Methods ---
+
+    fun onFaceCaptured(bitmap: Bitmap) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isAiProcessing = true)
+            when (val result = aiService.recognizeStudentsFromImage(bitmap)) {
+                is Resource.Success -> {
+                    result.data?.forEach { studentId ->
+                        onAttendanceChanged(studentId, true)
+                    }
+                    _eventFlow.emit(UiEvent.ShowSnackbar("AI identified ${result.data?.size} students"))
+                }
+                is Resource.Error -> {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "AI Recognition failed"))
+                }
+                else -> Unit
+            }
+            _state.value = _state.value.copy(isAiProcessing = false)
+        }
+    }
+
+    fun onQrScanned(bitmap: Bitmap) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isAiProcessing = true)
+            when (val result = aiService.scanAttendanceQR(bitmap)) {
+                is Resource.Success -> {
+                    val studentId = result.data ?: ""
+                    onAttendanceChanged(studentId, true)
+                    _eventFlow.emit(UiEvent.ShowSnackbar("QR Check-in successful"))
+                }
+                is Resource.Error -> {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Invalid QR Code"))
+                }
+                else -> Unit
+            }
+            _state.value = _state.value.copy(isAiProcessing = false)
+        }
+    }
+
+    fun onVoiceRecorded(audioFile: File) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isAiProcessing = true)
+            val studentNames = _state.value.students.map { "${it.firstName} ${it.lastName}" }
+            when (val result = aiService.processVoiceAttendance(audioFile, studentNames)) {
+                is Resource.Success -> {
+                    result.data?.forEach { studentId ->
+                        onAttendanceChanged(studentId, true)
+                    }
+                    _eventFlow.emit(UiEvent.ShowSnackbar("Voice roll call processed"))
+                }
+                is Resource.Error -> {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Voice processing failed"))
+                }
+                else -> Unit
+            }
+            _state.value = _state.value.copy(isAiProcessing = false)
         }
     }
 
@@ -132,14 +181,6 @@ class AttendanceViewModel @Inject constructor(
         }
     }
 
-    fun markAttendance(
-        attendanceRecords: List<AttendanceRecord>
-    ) {
-        viewModelScope.launch {
-            attendanceRepository.saveAttendance(attendanceRecords)
-        }
-    }
-
     data class AttendanceState(
         val user: User? = null,
         val classes: Resource<List<SchoolClass>> = Resource.Loading(),
@@ -150,8 +191,12 @@ class AttendanceViewModel @Inject constructor(
         val selectedSubjectId: String = "",
         val selectedDate: Date = Date(),
         val isLoading: Boolean = false,
-        val isSaving: Boolean = false
+        val isSaving: Boolean = false,
+        val isAiProcessing: Boolean = false,
+        val aiMode: AiMode = AiMode.NONE
     )
+
+    enum class AiMode { NONE, FACE, QR, VOICE }
 
     sealed class UiEvent {
         object SaveSuccess : UiEvent()

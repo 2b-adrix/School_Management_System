@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "8.7.3"
 kotlin = "2.1.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -22,7 +22,7 @@ coil = "3.0.4"
 openpdf = "1.3.38"
 ksp = "2.1.0-1.0.29"
 camerax = "1.4.1"
-mlkitFaceDetection = "17.1.0"
+mlkitFaceDetection = "16.1.7"
 mlkitBarcodeScanning = "17.3.0"
 googleAi = "0.9.0"
 
