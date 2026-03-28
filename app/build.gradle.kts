@@ -87,6 +87,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // Supabase
     implementation(platform(libs.supabase.bom))
@@ -94,9 +95,11 @@ dependencies {
     implementation(libs.supabase.auth)
     implementation(libs.supabase.storage)
 
-    // Ktor (required for Supabase)
-    implementation(libs.ktor.client.android)
+    // Ktor
     implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
 
@@ -129,6 +132,9 @@ configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "androidx.browser" && requested.name == "browser") {
             useVersion("1.8.0")
+        }
+        if (requested.group == "io.ktor") {
+            useVersion(libs.versions.ktor.get())
         }
     }
 }

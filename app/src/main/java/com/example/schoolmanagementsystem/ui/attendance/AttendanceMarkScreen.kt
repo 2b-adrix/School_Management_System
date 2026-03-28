@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.ui.attendance
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -276,27 +277,36 @@ fun AttendanceRow(studentName: String, rollNumber: String, isPresent: Boolean, o
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = CircleShape,
-                color = if (isPresent) Color(0xFF4CAF50).copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant
+                color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = if (isPresent) Icons.Rounded.CheckCircle else Icons.Rounded.Person,
-                        contentDescription = null,
-                        tint = if (isPresent) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(
+                        text = studentName.take(1).uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
+            
             Spacer(modifier = Modifier.width(16.dp))
+            
             Column(modifier = Modifier.weight(1f)) {
-                Text(studentName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
-                Text("Roll No: $rollNumber", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = studentName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
+                Text(text = "Roll: $rollNumber", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(checked = isPresent, onCheckedChange = onToggle)
+
+            Switch(
+                checked = isPresent,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF4CAF50)
+                )
+            )
         }
     }
 }
 
-// Extension to convert ImageProxy to Bitmap
 fun ImageProxy.toBitmap(): Bitmap {
     val buffer = planes[0].buffer
     val bytes = ByteArray(buffer.remaining())
