@@ -26,7 +26,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.ui.navigation.Screen
+import com.example.schoolmanagementsystem.ui.theme.EliteGoldGradient
+import com.example.schoolmanagementsystem.ui.theme.glassmorphic
 import com.example.schoolmanagementsystem.ui.theme.spacing
+import com.example.schoolmanagementsystem.ui.components.EliteAIInsightCard
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -129,10 +132,13 @@ fun DashboardScreen(
                         Column {
                             Text(
                                 "Hello, ${state.userName.split(" ").firstOrNull() ?: "User"}",
-                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    brush = EliteGoldGradient,
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
                             Text(
-                                "Welcome to your dashboard",
+                                "Welcome to your elite dashboard",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -200,14 +206,7 @@ fun DrawerHeader(state: DashboardViewModel.DashboardState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                    )
-                )
-            )
+            .background(EliteGoldGradient)
             .statusBarsPadding()
             .padding(24.dp)
     ) {
@@ -246,10 +245,20 @@ fun StudentDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // AI Insight Section
+        item {
+            EliteAIInsightCard(
+                insight = state.aiInsight,
+                isLoading = state.isAILoading
+            )
+        }
+
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .glassmorphic(),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Row(
@@ -258,7 +267,13 @@ fun StudentDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Fees Due", style = MaterialTheme.typography.labelLarge)
-                        Text("$ ${state.feeDuesAmount}", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+                        Text(
+                            "$ ${state.feeDuesAmount}", 
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                brush = EliteGoldGradient,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = { onNavigate(Screen.FeeList.route) },
@@ -318,9 +333,11 @@ fun StudentDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
 @Composable
 fun ActionCard(title: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Card(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .glassmorphic()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
@@ -394,14 +411,20 @@ fun AdminDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String
 @Composable
 fun AdminStatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
+        modifier = modifier.glassmorphic(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = value, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+            Text(
+                text = value, 
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    brush = EliteGoldGradient,
+                    fontWeight = FontWeight.Bold
+                )
+            )
             Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -434,9 +457,9 @@ fun DrawerItem(
 @Composable
 fun NoticeItemCard(notice: DashboardViewModel.Notice) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().glassmorphic(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
         Row(
@@ -478,9 +501,10 @@ fun ManagementCard(title: String, subtitle: String, icon: ImageVector, onClick: 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .glassmorphic()
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {

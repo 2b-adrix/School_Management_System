@@ -25,7 +25,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -119,6 +120,16 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
+    // Elite UI & Biometric
+    implementation(libs.lottie.compose)
+    implementation(libs.androidx.splashscreen)
+    implementation(libs.androidx.biometric)
+
+    // Excellent Backend (Dynamic Sync)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -134,7 +145,10 @@ configurations.all {
             useVersion("1.8.0")
         }
         if (requested.group == "io.ktor") {
-            useVersion(libs.versions.ktor.get())
+            useVersion("3.0.1")
+        }
+        if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-serialization")) {
+            useVersion("1.7.3")
         }
     }
 }

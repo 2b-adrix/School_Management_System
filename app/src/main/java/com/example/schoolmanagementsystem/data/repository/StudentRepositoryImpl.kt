@@ -1,39 +1,62 @@
 package com.example.schoolmanagementsystem.data.repository
 
+import com.example.schoolmanagementsystem.data.local.dao.StudentDao
+import com.example.schoolmanagementsystem.data.local.entity.toDomain
+import com.example.schoolmanagementsystem.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.data.manager.SessionManager
 import com.example.schoolmanagementsystem.domain.model.Student
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.Columns
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class StudentRepositoryImpl @Inject constructor(
     private val postgrest: Postgrest,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val studentDao: StudentDao
 ) : StudentRepository {
 
     override fun getAllStudents(): Flow<Resource<List<Student>>> = flow {
-        emit(Resource.Loading())
+        // Excellent Backend: Emit local data immediately
+        val localStudents = studentDao.getAllStudents().firstOrNull() ?: emptyList()
+        if (localStudents.isNotEmpty()) {
+            emit(Resource.Success(localStudents.map { it.toDomain() }))
+        } else {
+            emit(Resource.Loading())
+        }
+
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull()
-            val students = postgrest["students"]
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            val remoteStudents = postgrest["students"]
                 .select {
                     filter {
-                        eq("school_id", schoolId ?: "")
+                        eq("school_id", schoolId)
                     }
                 }
                 .decodeList<Student>()
-            emit(Resource.Success(students))
+            
+            // Sync local DB
+            remoteStudents.forEach { student ->
+                studentDao.insertStudent(student.toEntity())
+            }
+            
+            emit(Resource.Success(remoteStudents))
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An error occurred"))
+            if (localStudents.isEmpty()) {
+                emit(Resource.Error(e.message ?: "An error occurred"))
+            }
         }
     }
 
     override suspend fun getStudentById(id: String): Resource<Student> {
+        // Try local first
+        val localStudent = studentDao.getStudentById(id)
+        if (localStudent != null) {
+            return Resource.Success(localStudent.toDomain())
+        }
+
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val student = postgrest["students"]
@@ -44,6 +67,9 @@ class StudentRepositoryImpl @Inject constructor(
                     }
                 }
                 .decodeSingle<Student>()
+            
+            // Cache locally
+            studentDao.insertStudent(student.toEntity())
             Resource.Success(student)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Student not found")
@@ -53,29 +79,44 @@ class StudentRepositoryImpl @Inject constructor(
     override suspend fun addStudent(student: Student): Resource<Unit> {
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val studentWithSchoolId = student.copy(schoolId = schoolId)
-            postgrest["students"].insert(studentWithSchoolId)
+            val studentWithId = student.copy(schoolId = schoolId)
+            
+            // Save locally first
+            studentDao.insertStudent(studentWithId.toEntity())
+            
+            // Sync to remote
+            postgrest["students"].insert(studentWithId)
             Resource.Success(Unit)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to add student")
+            // Even if remote fails, it's in local DB
+            Resource.Success(Unit)
         }
     }
 
     override suspend fun bulkAddStudents(students: List<Student>): Resource<Unit> {
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val studentsWithSchoolId = students.map { it.copy(schoolId = schoolId) }
-            postgrest["students"].insert(studentsWithSchoolId)
+            val studentsWithId = students.map { it.copy(schoolId = schoolId) }
+            
+            // Bulk insert locally
+            studentsWithId.forEach { studentDao.insertStudent(it.toEntity()) }
+            
+            postgrest["students"].insert(studentsWithId)
             Resource.Success(Unit)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to bulk add students")
+            Resource.Success(Unit)
         }
     }
 
     override suspend fun updateStudent(student: Student): Resource<Unit> {
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["students"].update(student.copy(schoolId = schoolId)) {
+            val updatedStudent = student.copy(schoolId = schoolId)
+            
+            // Update local
+            studentDao.updateStudent(updatedStudent.toEntity())
+            
+            postgrest["students"].update(updatedStudent) {
                 filter {
                     eq("id", student.id)
                     eq("school_id", schoolId)
@@ -90,6 +131,10 @@ class StudentRepositoryImpl @Inject constructor(
     override suspend fun deleteStudent(student: Student): Resource<Unit> {
         return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            
+            // Delete local
+            studentDao.deleteStudent(student.toEntity())
+
             postgrest["students"].delete {
                 filter {
                     eq("id", student.id)

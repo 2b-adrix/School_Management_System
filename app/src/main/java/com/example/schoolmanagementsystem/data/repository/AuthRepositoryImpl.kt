@@ -1,5 +1,7 @@
 package com.example.schoolmanagementsystem.data.repository
 
+import com.example.schoolmanagementsystem.data.local.dao.UserDao
+import com.example.schoolmanagementsystem.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.data.manager.SessionManager
 import com.example.schoolmanagementsystem.domain.model.User
 import com.example.schoolmanagementsystem.domain.model.UserRole
@@ -10,6 +12,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -17,7 +20,8 @@ import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val supabaseAuth: Auth,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val userDao: UserDao
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Resource<User> {
@@ -38,17 +42,19 @@ class AuthRepositoryImpl @Inject constructor(
                 val schoolId = currentUser.userMetadata?.get("school_id")?.jsonPrimitive?.content ?: ""
                 val name = currentUser.userMetadata?.get("full_name")?.jsonPrimitive?.content ?: "User"
 
-                sessionManager.saveSession(name, currentUser.email ?: email, role, schoolId)
-                
-                Resource.Success(
-                    User(
-                        id = currentUser.id,
-                        name = name,
-                        email = currentUser.email ?: email,
-                        role = role,
-                        schoolId = schoolId
-                    )
+                val user = User(
+                    id = currentUser.id,
+                    name = name,
+                    email = currentUser.email ?: email,
+                    role = role,
+                    schoolId = schoolId
                 )
+
+                // Excellent Backend: Cache user locally
+                userDao.insertUser(user.toEntity())
+                sessionManager.saveSession(name, user.email, role, schoolId)
+                
+                Resource.Success(user)
             } else {
                 Resource.Error("Login failed")
             }
@@ -60,6 +66,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout() {
         try {
             supabaseAuth.signOut()
+            userDao.deleteUser()
             sessionManager.clearSession()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -67,30 +74,8 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun getCurrentUser(): Flow<User?> {
-        return supabaseAuth.sessionStatus.map { status ->
-            if (status is SessionStatus.Authenticated) {
-                supabaseAuth.currentUserOrNull()?.let { user ->
-                    val roleString = user.userMetadata?.get("role")?.jsonPrimitive?.content?.uppercase() ?: "STUDENT"
-                    val role = try {
-                        UserRole.valueOf(roleString)
-                    } catch (e: Exception) {
-                        UserRole.STUDENT
-                    }
-                    
-                    val schoolId = user.userMetadata?.get("school_id")?.jsonPrimitive?.content ?: ""
-                    
-                    User(
-                        id = user.id,
-                        name = user.userMetadata?.get("full_name")?.jsonPrimitive?.content ?: "User",
-                        email = user.email ?: "",
-                        role = role,
-                        schoolId = schoolId
-                    )
-                }
-            } else {
-                null
-            }
-        }
+        // Excellent Backend: Reactive flow from local cache
+        return userDao.getUser().map { it?.toUser() }
     }
 
     override suspend fun signUp(
@@ -112,15 +97,15 @@ class AuthRepositoryImpl @Inject constructor(
             }
             val user = supabaseAuth.currentUserOrNull()
             if (user != null) {
-                Resource.Success(
-                    User(
-                        id = user.id,
-                        name = fullName,
-                        email = email,
-                        role = role,
-                        schoolId = schoolId
-                    )
+                val newUser = User(
+                    id = user.id,
+                    name = fullName,
+                    email = email,
+                    role = role,
+                    schoolId = schoolId
                 )
+                userDao.insertUser(newUser.toEntity())
+                Resource.Success(newUser)
             } else {
                 Resource.Error("Signup successful but user not found")
             }

@@ -15,9 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,9 +28,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.MainViewModel
 import com.example.schoolmanagementsystem.R
 import com.example.schoolmanagementsystem.ui.auth.AuthViewModel
+import com.example.schoolmanagementsystem.ui.auth.BiometricAuthenticator
 import com.example.schoolmanagementsystem.ui.dashboard.DashboardBottomNavigation
 import com.example.schoolmanagementsystem.ui.navigation.Screen
 import com.example.schoolmanagementsystem.ui.profile.ProfileViewModel
+import com.example.schoolmanagementsystem.ui.theme.EliteGoldGradient
+import com.example.schoolmanagementsystem.ui.theme.glassmorphic
+import com.example.schoolmanagementsystem.ui.theme.spacing
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,8 +49,11 @@ fun MeScreen(
     val themeMode by mainViewModel.themeMode.collectAsState()
     val languageCode by mainViewModel.languageCode.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
+    val isBiometricEnabled by authViewModel.isBiometricEnabled.collectAsState()
     
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
+    val authenticator = remember { BiometricAuthenticator(context) }
+    
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
 
@@ -59,10 +69,16 @@ fun MeScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.me), fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        stringResource(R.string.me), 
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(brush = EliteGoldGradient)
+                    ) 
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = primaryColor,
-                    titleContentColor = Color.White
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color.Unspecified
                 )
             )
         },
@@ -80,34 +96,42 @@ fun MeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .background(primaryColor),
+                    .height(200.dp)
+                    .background(EliteGoldGradient),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 24.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(110.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .padding(2.dp)
+                            .background(Color(0xFF1E1E1E), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Rounded.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(60.dp))
+                        Icon(
+                            Icons.Rounded.Person, 
+                            contentDescription = null, 
+                            tint = Color(0xFFD4AF37), 
+                            modifier = Modifier.size(70.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         currentUser?.name ?: profileState.name, 
-                        color = Color.White, 
-                        fontSize = 22.sp, 
+                        color = Color(0xFF382900), 
+                        fontSize = 24.sp, 
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        currentUser?.role?.name ?: profileState.subtitle, 
-                        color = Color.White.copy(alpha = 0.8f), 
-                        fontSize = 14.sp
+                        "Elite ${currentUser?.role?.name ?: profileState.subtitle}", 
+                        color = Color(0xFF382900).copy(alpha = 0.8f), 
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -115,9 +139,9 @@ fun MeScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                stringResource(R.string.account_settings),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
+                stringResource(R.string.account_settings).uppercase(),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.sp),
                 color = MaterialTheme.colorScheme.primary
             )
 
@@ -127,12 +151,21 @@ fun MeScreen(
                 onClick = { onNavigate(Screen.Profile.route) }
             )
 
+            if (authenticator.isBiometricAvailable()) {
+                SettingsItem(
+                    icon = Icons.Rounded.Fingerprint,
+                    title = "Biometric Authentication",
+                    subtitle = if (isBiometricEnabled) "Enabled" else "Disabled",
+                    onClick = { authViewModel.setBiometricEnabled(!isBiometricEnabled) }
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                stringResource(R.string.app_preferences),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
+                stringResource(R.string.app_preferences).uppercase(),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.sp),
                 color = MaterialTheme.colorScheme.primary
             )
 
@@ -154,25 +187,34 @@ fun MeScreen(
                 onClick = { showLanguageDialog = true }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             
             Button(
                 onClick = { authViewModel.logout() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(8.dp)
+                    .padding(horizontal = 24.dp)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f), contentColor = MaterialTheme.colorScheme.error),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
             ) {
-                Text(stringResource(R.string.logout))
+                Text(
+                    stringResource(R.string.logout), 
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
             }
+            
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            title = { Text(stringResource(R.string.select_theme)) },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = { Text(stringResource(R.string.select_theme), style = TextStyle(brush = EliteGoldGradient)) },
             text = {
                 Column {
                     ThemeOption(stringResource(R.string.system_default), "system", themeMode) { mainViewModel.setThemeMode("system"); showThemeDialog = false }
@@ -189,7 +231,8 @@ fun MeScreen(
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text(stringResource(R.string.select_language)) },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = { Text(stringResource(R.string.select_language), style = TextStyle(brush = EliteGoldGradient)) },
             text = {
                 Column {
                     LanguageOption(stringResource(R.string.english), "en", languageCode) { mainViewModel.setLanguageCode("en"); showLanguageDialog = false }
@@ -213,11 +256,11 @@ fun SettingsItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 24.dp, vertical = 6.dp)
+            .glassmorphic()
             .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -225,12 +268,12 @@ fun SettingsItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -239,13 +282,13 @@ fun SettingsItem(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 if (subtitle != null) {
-                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color.LightGray
+                tint = MaterialTheme.colorScheme.outline
             )
         }
     }
@@ -260,9 +303,13 @@ fun ThemeOption(text: String, mode: String, currentMode: String, onClick: () -> 
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(selected = mode == currentMode, onClick = onClick)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text)
+        RadioButton(
+            selected = mode == currentMode, 
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFD4AF37))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text, fontWeight = if(mode == currentMode) FontWeight.Bold else FontWeight.Normal)
     }
 }
 
@@ -273,10 +320,13 @@ fun LanguageOption(text: String, code: String, currentCode: String, onClick: () 
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(selected = code == currentCode, onClick = onClick)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text)
+        verticalAlignment = Alignment.CenterVertically) {
+        RadioButton(
+            selected = code == currentCode, 
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFD4AF37))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text, fontWeight = if(code == currentCode) FontWeight.Bold else FontWeight.Normal)
     }
 }

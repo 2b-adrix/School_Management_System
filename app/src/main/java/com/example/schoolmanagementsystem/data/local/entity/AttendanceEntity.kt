@@ -12,7 +12,8 @@ data class AttendanceEntity(
     val classId: String,
     val subjectId: String,
     val date: String,
-    val isPresent: Boolean
+    val isPresent: Boolean,
+    val isSynced: Boolean = true // Excellent Backend: Track sync status
 )
 
 fun AttendanceEntity.toDomain() = AttendanceRecord(
@@ -25,12 +26,13 @@ fun AttendanceEntity.toDomain() = AttendanceRecord(
     isPresent = isPresent
 )
 
-fun AttendanceRecord.toEntity() = AttendanceEntity(
+fun AttendanceRecord.toEntity(isSynced: Boolean = true) = AttendanceEntity(
     id = id,
     schoolId = schoolId,
     studentId = studentId,
     classId = classId,
     subjectId = subjectId,
     date = date,
-    isPresent = isPresent
+    isPresent = isPresent,
+    isSynced = isSynced
 )

@@ -14,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -26,6 +28,8 @@ import com.example.schoolmanagementsystem.ui.components.PrimaryButton
 import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
 import com.example.schoolmanagementsystem.ui.components.SectionTitle
 import com.example.schoolmanagementsystem.ui.schoolclass.ClassListViewModel
+import com.example.schoolmanagementsystem.ui.theme.EliteGoldGradient
+import com.example.schoolmanagementsystem.ui.theme.glassmorphic
 import com.example.schoolmanagementsystem.ui.theme.spacing
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
@@ -108,7 +112,32 @@ fun AddFeeStructureScreen(
                 .padding(spacing().spacing4),
             verticalArrangement = Arrangement.spacedBy(spacing().spacing4)
         ) {
-            SectionTitle(title = "Fee Configuration")
+            
+            // Elite Header Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .glassmorphic(),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(modifier = Modifier.padding(spacing().spacing4)) {
+                    Text(
+                        text = "Fee Configuration",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            brush = EliteGoldGradient,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Text(
+                        text = "Define elite billing structures for premium accounts",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(spacing().spacing2))
             
             // Class Dropdown
             ExposedDropdownMenuBox(
@@ -120,7 +149,7 @@ fun AddFeeStructureScreen(
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Select Class *") },
-                    leadingIcon = { Icon(Icons.Rounded.Class, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Rounded.Class, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isClassDropdownExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()

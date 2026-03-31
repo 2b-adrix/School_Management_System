@@ -13,8 +13,14 @@ interface AttendanceDao {
     fun getAttendanceForClass(classId: String, date: String): Flow<List<AttendanceEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAttendance(attendance: List<AttendanceEntity>): List<Long>
+    suspend fun insertAttendance(attendance: List<AttendanceEntity>)
 
     @Query("SELECT * FROM attendance WHERE studentId = :studentId")
     fun getAttendanceForStudent(studentId: String): Flow<List<AttendanceEntity>>
+
+    @Query("SELECT * FROM attendance WHERE isSynced = 0")
+    suspend fun getUnsyncedAttendance(): List<AttendanceEntity>
+
+    @Query("UPDATE attendance SET isSynced = 1 WHERE id IN (:ids)")
+    suspend fun markAsSynced(ids: List<String>)
 }

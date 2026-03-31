@@ -10,6 +10,7 @@ import com.example.schoolmanagementsystem.domain.repository.ClassRepository
 import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.repository.TeacherRepository
 import com.example.schoolmanagementsystem.domain.repository.FeeRepository
+import com.example.schoolmanagementsystem.domain.service.GenerativeAIService
 import com.example.schoolmanagementsystem.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -23,7 +24,8 @@ class DashboardViewModel @Inject constructor(
     private val teacherRepository: TeacherRepository,
     private val classRepository: ClassRepository,
     private val announcementRepository: AnnouncementRepository,
-    private val feeRepository: FeeRepository
+    private val feeRepository: FeeRepository,
+    private val aiService: GenerativeAIService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardState())
@@ -57,6 +59,7 @@ class DashboardViewModel @Inject constructor(
                     
                     if (user.role == UserRole.STUDENT) {
                         loadStudentData(user.id)
+                        loadAIInsight(user.id)
                     }
                 }
             }
@@ -83,6 +86,19 @@ class DashboardViewModel @Inject constructor(
                     _state.update { it.copy(feeDuesAmount = due) }
                 }
             }.launchIn(viewModelScope)
+        }
+    }
+
+    private fun loadAIInsight(studentId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isAILoading = true) }
+            // Simulate attendance percentage for AI demo
+            val result = aiService.getAttendanceInsight(85.0f)
+            if (result is Resource.Success) {
+                _state.update { it.copy(aiInsight = result.data ?: "", isAILoading = false) }
+            } else {
+                _state.update { it.copy(aiInsight = "Focus on your studies to achieve elite results!", isAILoading = false) }
+            }
         }
     }
 
@@ -124,6 +140,8 @@ class DashboardViewModel @Inject constructor(
 
     data class DashboardState(
         val isLoading: Boolean = true,
+        val isAILoading: Boolean = false,
+        val aiInsight: String = "",
         val user: User? = null,
         val studentCount: Int = 0,
         val teacherCount: Int = 0,

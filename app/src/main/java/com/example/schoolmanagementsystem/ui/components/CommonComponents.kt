@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -227,8 +229,13 @@ fun PrimaryButton(
     isLoading: Boolean = false,
     enabled: Boolean = true
 ) {
+    val haptic = LocalHapticFeedback.current
+    
     Button(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
@@ -253,12 +260,7 @@ fun PrimaryButton(
 
 @Composable
 fun LoadingScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(strokeWidth = 3.dp)
-    }
+    EliteLoadingScreen()
 }
 
 @Composable

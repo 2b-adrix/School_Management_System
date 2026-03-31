@@ -7,6 +7,7 @@ import com.example.schoolmanagementsystem.data.local.entity.*
 
 @Database(
     entities = [
+        UserEntity::class,
         StudentEntity::class,
         TeacherEntity::class,
         ClassEntity::class,
@@ -15,10 +16,11 @@ import com.example.schoolmanagementsystem.data.local.entity.*
         ExamEntity::class,
         ResultEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
     abstract fun studentDao(): StudentDao
     abstract fun teacherDao(): TeacherDao
     abstract fun classDao(): ClassDao

@@ -1,6 +1,7 @@
 package com.example.schoolmanagementsystem.data.manager
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -22,6 +23,7 @@ class SessionManager @Inject constructor(
         private val USER_NAME = stringPreferencesKey("user_name")
         private val USER_EMAIL = stringPreferencesKey("user_email")
         private val SCHOOL_ID = stringPreferencesKey("school_id")
+        private val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
     }
 
     suspend fun saveSession(name: String, email: String, role: UserRole, schoolId: String) {
@@ -43,6 +45,16 @@ class SessionManager @Inject constructor(
     
     val schoolId: Flow<String?> = context.dataStore.data.map { prefs ->
         prefs[SCHOOL_ID]
+    }
+
+    val isBiometricEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[BIOMETRIC_ENABLED] ?: false
+    }
+
+    suspend fun setBiometricEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[BIOMETRIC_ENABLED] = enabled
+        }
     }
 
     suspend fun clearSession() {

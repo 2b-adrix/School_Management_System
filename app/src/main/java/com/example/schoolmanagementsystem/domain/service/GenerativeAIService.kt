@@ -17,4 +17,9 @@ interface GenerativeAIService {
      * Determines the most important class today based on the timetable.
      */
     suspend fun getImportantClassInsight(timetableEntries: List<String>): Resource<String>
+
+    /**
+     * Generates a comprehensive performance report for a class or student.
+     */
+    suspend fun generatePerformanceReport(data: String): Resource<String>
 }

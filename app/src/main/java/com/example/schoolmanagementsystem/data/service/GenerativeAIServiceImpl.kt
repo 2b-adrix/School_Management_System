@@ -41,4 +41,14 @@ class GenerativeAIServiceImpl @Inject constructor() : GenerativeAIService {
             Resource.Error(e.message ?: "Failed to get insight")
         }
     }
+
+    override suspend fun generatePerformanceReport(data: String): Resource<String> {
+        return try {
+            val prompt = "Generate a comprehensive performance report for this student's data: $data. Provide it in 3 sentences."
+            val response = generativeModel.generateContent(prompt)
+            Resource.Success(response.text ?: "No report generated.")
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to generate report")
+        }
+    }
 }

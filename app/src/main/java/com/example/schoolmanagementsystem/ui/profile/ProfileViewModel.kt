@@ -31,6 +31,7 @@ class ProfileViewModel @Inject constructor(
             user?.let {
                 _state.value = _state.value.copy(
                     isLoading = true,
+                    id = it.id,
                     name = it.name,
                     email = it.email,
                     subtitle = it.role.name
@@ -62,12 +63,14 @@ class ProfileViewModel @Inject constructor(
 
     data class ProfileState(
         val isLoading: Boolean = false,
+        val id: String = "",
         val name: String = "",
         val subtitle: String = "",
         val admissionNumber: String = "N/A",
         val className: String = "N/A",
         val batch: String = "N/A",
         val admissionDate: String = "N/A",
+        val joinedDate: String = "N/A",
         val guardianName: String = "N/A",
         val gender: String = "N/A",
         val dob: String = "N/A",

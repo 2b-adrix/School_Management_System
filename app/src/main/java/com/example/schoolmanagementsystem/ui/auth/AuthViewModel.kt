@@ -24,8 +24,19 @@ class AuthViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    private val _isBiometricEnabled = MutableStateFlow(false)
+    val isBiometricEnabled = _isBiometricEnabled.asStateFlow()
+
     val currentUser = repository.getCurrentUser()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    init {
+        viewModelScope.launch {
+            sessionManager.isBiometricEnabled.collect {
+                _isBiometricEnabled.value = it
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -33,9 +44,6 @@ class AuthViewModel @Inject constructor(
             val result = repository.login(email, password)
             _loginState.value = result
             if (result is Resource.Success) {
-                result.data?.let { user ->
-                    sessionManager.saveSession(user.name, user.email, user.role, user.schoolId)
-                }
                 _eventFlow.emit(UiEvent.LoginSuccess)
             } else if (result is Resource.Error) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Unknown error"))
@@ -43,10 +51,16 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun setBiometricEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            sessionManager.setBiometricEnabled(enabled)
+            _isBiometricEnabled.value = enabled
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             repository.logout()
-            sessionManager.clearSession()
             _eventFlow.emit(UiEvent.Logout)
         }
     }

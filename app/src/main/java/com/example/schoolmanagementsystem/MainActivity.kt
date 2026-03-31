@@ -2,10 +2,10 @@ package com.example.schoolmanagementsystem
 
 import android.content.Context
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
@@ -13,6 +13,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,18 +59,18 @@ import com.example.schoolmanagementsystem.ui.teacher.TeacherDetailScreen
 import com.example.schoolmanagementsystem.ui.teacher.TeacherListScreen
 import com.example.schoolmanagementsystem.ui.timetable.AddTimetableEntryScreen
 import com.example.schoolmanagementsystem.ui.timetable.TimetableListScreen
-import com.example.schoolmanagementsystem.ui.timetable.TimetableScreen
 import com.example.schoolmanagementsystem.ui.theme.SchoolManagementSystemTheme
 import com.example.schoolmanagementsystem.ui.message.ChatDetailScreen
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

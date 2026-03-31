@@ -22,8 +22,13 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).build()
+        )
+        .fallbackToDestructiveMigration() // Elite Backend: Auto-migration during development
+        .build()
     }
+
+    @Provides
+    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
 
     @Provides
     fun provideStudentDao(db: AppDatabase): StudentDao = db.studentDao()
