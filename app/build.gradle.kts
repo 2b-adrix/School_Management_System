@@ -106,13 +106,14 @@ dependencies {
 
     // Image Loading & PDF
     implementation(libs.coil.compose)
-    implementation(libs.coil.network)
     implementation(libs.openpdf)
 
     // AI & ML Kit
     implementation(libs.mlkit.face.detection)
     implementation(libs.mlkit.barcode.scanning)
-    implementation(libs.google.ai.client)
+    implementation(libs.google.ai.client) {
+        exclude(group = "io.ktor")
+    }
 
     // CameraX
     implementation(libs.androidx.camera.core)
@@ -130,6 +131,13 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
+    // Force browser version to avoid SDK 36 requirement
+    implementation("androidx.browser:browser:1.8.0") {
+        version {
+            strictly("1.8.0")
+        }
+    }
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -139,16 +147,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "androidx.browser" && requested.name == "browser") {
-            useVersion("1.8.0")
-        }
-        if (requested.group == "io.ktor") {
-            useVersion("3.0.1")
-        }
-        if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-serialization")) {
-            useVersion("1.7.3")
-        }
-    }
-}
+
