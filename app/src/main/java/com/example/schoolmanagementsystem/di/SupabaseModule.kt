@@ -7,8 +7,8 @@ import dagger.hilt.components.SingletonComponent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseInternal
 import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.gotrue.GoTrue
+import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.Storage
@@ -28,7 +28,7 @@ object SupabaseModule {
             supabaseUrl = "https://xnksrnvgvhgzntbsqplv.supabase.co",
             supabaseKey = "sb_publishable_S5p0EZHyfj90QyW3B09wjw_5PgQ-8j8"
         ) {
-            install(Auth)
+            install(GoTrue)
             install(Postgrest)
             install(Storage)
             
@@ -44,7 +44,7 @@ object SupabaseModule {
 
     @Provides
     @Singleton
-    fun provideSupabaseAuth(client: SupabaseClient): Auth = client.auth
+    fun provideSupabaseGoTrue(client: SupabaseClient): GoTrue = client.gotrue
 
     @Provides
     @Singleton
