@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil3.compose.AsyncImage
+import coil.compose.AsyncImage
 import com.example.schoolmanagementsystem.domain.util.Resource
 import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
 import kotlinx.coroutines.flow.collectLatest

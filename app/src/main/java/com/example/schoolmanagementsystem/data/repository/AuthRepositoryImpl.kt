@@ -7,10 +7,8 @@ import com.example.schoolmanagementsystem.domain.model.User
 import com.example.schoolmanagementsystem.domain.model.UserRole
 import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
-import io.github.jan.supabase.gotrue.GoTrue
-import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.gotrue.SessionStatus
-import io.github.jan.supabase.gotrue.user.UserInfo as SupabaseUser
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -20,7 +18,7 @@ import kotlinx.serialization.json.put
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val supabaseAuth: GoTrue,
+    private val supabaseAuth: Auth,
     private val sessionManager: SessionManager,
     private val userDao: UserDao
 ) : AuthRepository {

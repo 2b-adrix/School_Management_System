@@ -15,10 +15,8 @@ class StorageRepositoryImpl @Inject constructor(
         bucketName: String
     ): Resource<String> {
         return try {
-            val bucket = supabaseStorage[bucketName]
-            bucket.upload(path, imageBytes) {
-                upsert = true
-            }
+            val bucket = supabaseStorage.from(bucketName)
+            bucket.upload(path, imageBytes, upsert = true)
             Resource.Success(path)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to upload image")
@@ -26,7 +24,7 @@ class StorageRepositoryImpl @Inject constructor(
     }
 
     override fun getPublicUrl(path: String, bucketName: String): String {
-        val bucket = supabaseStorage[bucketName]
+        val bucket = supabaseStorage.from(bucketName)
         return bucket.publicUrl(path)
     }
 }

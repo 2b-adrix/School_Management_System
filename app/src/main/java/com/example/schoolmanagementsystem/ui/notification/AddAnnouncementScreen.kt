@@ -125,7 +125,7 @@ fun AddAnnouncementScreen(
                         readOnly = true,
                         label = { Text("Select Class *") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isClassDropdownExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
                         shape = RoundedCornerShape(12.dp)
                     )
 

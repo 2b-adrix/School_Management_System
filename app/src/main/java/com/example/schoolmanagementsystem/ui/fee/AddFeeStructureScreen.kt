@@ -153,7 +153,7 @@ fun AddFeeStructureScreen(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isClassDropdownExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                        .menuAnchor(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
