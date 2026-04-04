@@ -38,6 +38,7 @@ import com.example.schoolmanagementsystem.frontend.ui.fee.AddFeeStructureScreen
 import com.example.schoolmanagementsystem.frontend.ui.fee.FeeScreen
 import com.example.schoolmanagementsystem.frontend.ui.gallery.GalleryScreen
 import com.example.schoolmanagementsystem.frontend.ui.library.LibraryScreen
+import com.example.schoolmanagementsystem.frontend.ui.library.LibrarySearchScreen
 import com.example.schoolmanagementsystem.frontend.ui.me.MeScreen
 import com.example.schoolmanagementsystem.frontend.ui.message.MessagesScreen
 import com.example.schoolmanagementsystem.frontend.ui.myclass.MyClassScreen
@@ -205,6 +206,9 @@ class MainActivity : FragmentActivity() {
                             onNavigate = { route -> navController.navigate(route) },
                             onNavigateBack = { navController.popBackStack() }
                         )
+                    }
+                    composable(Screen.LibrarySearch.route) {
+                        LibrarySearchScreen(onNavigateBack = { navController.popBackStack() })
                     }
 
                     // Timetable
