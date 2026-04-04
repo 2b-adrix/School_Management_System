@@ -1,8 +1,11 @@
 package com.example.schoolmanagementsystem.ui.exam
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -18,9 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
+import com.example.schoolmanagementsystem.ui.theme.PremiumBlueGradient
+import com.example.schoolmanagementsystem.ui.theme.glassmorphic
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarkEntryScreen(
     onNavigateBack: () -> Unit,
@@ -43,26 +47,64 @@ fun MarkEntryScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFF0F172A), // Premium Deep Slate
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Enter Marks", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
+            Column(
+                modifier = Modifier
+                    .background(PremiumBlueGradient)
+                    .statusBarsPadding()
+                    .padding(bottom = 20.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
-                },
-                actions = {
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                    
                     if (state.isSaving) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = Color(0xFFD4AF37), modifier = Modifier.size(24.dp))
                     } else {
-                        IconButton(onClick = { viewModel.saveMarks() }) {
-                            Icon(Icons.Rounded.Save, contentDescription = "Save", tint = Color.White)
+                        Button(
+                            onClick = { viewModel.saveMarks() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFD4AF37),
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Save All", fontWeight = FontWeight.Bold)
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                
+                Text(
+                    text = "Performance Entry",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Text(
+                    text = "Recording academic marks for this assessment",
+                    color = Color.White.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 2.dp)
+                )
+            }
         }
     ) { padding ->
         if (state.isLoading) {
@@ -73,13 +115,16 @@ fun MarkEntryScreen(
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
                     Text(
-                        "Student List",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        "STUDENT ROSTER",
+                        color = Color(0xFFD4AF37),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        letterSpacing = 1.2.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
                 items(state.students) { student ->
@@ -103,9 +148,14 @@ fun StudentMarkRow(
     onMarkChange: (String) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(1.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        modifier = Modifier
+            .fillMaxWidth()
+            .glassmorphic(
+                backgroundColor = Color.White.copy(alpha = 0.03f),
+                borderColor = Color.White.copy(alpha = 0.08f)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Row(
             modifier = Modifier
@@ -114,18 +164,54 @@ fun StudentMarkRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text("Roll No: $rollNo", color = Color.Gray, fontSize = 14.sp)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Surface(
+                    color = Color.White.copy(alpha = 0.1f),
+                    shape = CircleShape,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            name.take(1),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column {
+                    Text(
+                        name, 
+                        fontWeight = FontWeight.Bold, 
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                    Text(
+                        "Roll No: $rollNo", 
+                        color = Color.White.copy(alpha = 0.5f), 
+                        fontSize = 12.sp
+                    )
+                }
             }
             
             OutlinedTextField(
                 value = mark,
                 onValueChange = onMarkChange,
-                modifier = Modifier.width(80.dp),
-                label = { Text("Marks") },
+                modifier = Modifier.width(90.dp),
+                placeholder = { Text("0.0", color = Color.White.copy(alpha = 0.3f)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFD4AF37),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                    focusedContainerColor = Color.White.copy(alpha = 0.05f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp)
             )
         }
     }

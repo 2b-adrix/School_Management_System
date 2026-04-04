@@ -125,7 +125,7 @@ class DashboardViewModel @Inject constructor(
         announcementRepository.getAllAnnouncements().onEach { result ->
             if (result is Resource.Success) {
                 val notices = result.data?.take(5)?.map { 
-                    Notice(it.title, it.content, it.createdAt)
+                    Notice(it.id, it.title, it.content, it.createdAt)
                 } ?: emptyList()
                 _state.update { it.copy(notices = notices) }
             }
@@ -154,6 +154,7 @@ class DashboardViewModel @Inject constructor(
     )
 
     data class Notice(
+        val id: String,
         val title: String,
         val subtitle: String,
         val date: String

@@ -5,8 +5,9 @@ import android.graphics.Matrix
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,13 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.schoolmanagementsystem.ui.components.AppCard
 import com.example.schoolmanagementsystem.ui.components.LoadingScreen
 import com.example.schoolmanagementsystem.ui.components.SchoolTopAppBar
-import com.example.schoolmanagementsystem.ui.theme.spacing
+import com.example.schoolmanagementsystem.ui.theme.EliteGoldGradient
+import com.example.schoolmanagementsystem.ui.theme.glassmorphic
 import kotlinx.coroutines.flow.collectLatest
 import java.util.concurrent.Executors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceMarkScreen(
     onNavigateBack: () -> Unit,
@@ -60,28 +62,52 @@ fun AttendanceMarkScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SchoolTopAppBar(
-                title = "Mark Attendance",
+                title = "Elite Attendance",
                 onBackClick = onNavigateBack,
                 actions = {
-                    IconButton(onClick = { 
-                        showAiScanner = true 
-                        currentAiMode = AttendanceViewModel.AiMode.FACE
-                    }) {
-                        Icon(Icons.Rounded.AutoAwesome, "AI Scanner", tint = MaterialTheme.colorScheme.primary)
-                    }
-                    Button(
-                        onClick = { viewModel.saveAttendance() },
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !state.isLoading && !state.isSaving
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(EliteGoldGradient)
+                            .clickable { 
+                                showAiScanner = true 
+                                currentAiMode = AttendanceViewModel.AiMode.FACE
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        if (state.isSaving) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text("Save")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("AI Scan", color = Color.White, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
             )
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                tonalElevation = 8.dp,
+                shadowElevation = 16.dp
+            ) {
+                Button(
+                    onClick = { viewModel.saveAttendance() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    enabled = !state.isLoading && !state.isSaving
+                ) {
+                    if (state.isSaving) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                    } else {
+                        Text("Confirm Attendance", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+            }
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -89,26 +115,50 @@ fun AttendanceMarkScreen(
                 LoadingScreen()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Summary Header
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 2.dp,
-                        modifier = Modifier.fillMaxWidth()
+                    // Summary Header Card (Premium UX: Glanceable)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .glassmorphic(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
+                            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             val presentCount = state.attendanceRecords.values.count { it.isPresent }
-                            AttendanceSummaryItem("Total", state.students.size.toString(), MaterialTheme.colorScheme.primary)
-                            AttendanceSummaryItem("Present", presentCount.toString(), Color(0xFF4CAF50))
-                            AttendanceSummaryItem("Absent", (state.students.size - presentCount).toString(), MaterialTheme.colorScheme.error)
+                            val total = state.students.size
+                            
+                            Column {
+                                Text("Class Summary", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    "$presentCount / $total Present",
+                                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                            
+                            // Progress Circle
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(50.dp)) {
+                                CircularProgressIndicator(
+                                    progress = { if(total > 0) presentCount.toFloat()/total else 0f },
+                                    color = Color(0xFF4CAF50),
+                                    trackColor = Color.White.copy(alpha = 0.1f),
+                                    strokeWidth = 6.dp
+                                )
+                                Text(
+                                    "${if(total > 0) (presentCount*100/total) else 0}%",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
                         }
                     }
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.students) { student ->
@@ -260,47 +310,59 @@ fun AiModeButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: S
 }
 
 @Composable
-fun AttendanceSummaryItem(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = color)
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
 fun AttendanceRow(studentName: String, rollNumber: String, isPresent: Boolean, onToggle: (Boolean) -> Unit) {
-    AppCard {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glassmorphic(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = if (isPresent) Color(0xFF4CAF50).copy(alpha = 0.1f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = studentName.take(1).uppercase(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    if (isPresent) {
+                        Icon(Icons.Rounded.CheckCircle, null, tint = Color(0xFF4CAF50))
+                    } else {
+                        Text(
+                            text = studentName.take(1).uppercase(),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
             
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = studentName, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
-                Text(text = "Roll: $rollNumber", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = studentName, 
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                )
+                Text(
+                    text = "Roll ID: $rollNumber", 
+                    style = MaterialTheme.typography.bodySmall, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
+            // Professional Custom Toggle
             Switch(
                 checked = isPresent,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF4CAF50)
+                    checkedTrackColor = Color(0xFF4CAF50),
+                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             )
         }

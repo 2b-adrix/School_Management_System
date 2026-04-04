@@ -9,7 +9,9 @@ import com.example.schoolmanagementsystem.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class StudentRepositoryImpl @Inject constructor(
@@ -48,16 +50,16 @@ class StudentRepositoryImpl @Inject constructor(
                 emit(Resource.Error(e.message ?: "An error occurred"))
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun getStudentById(id: String): Resource<Student> {
-        // Try local first
-        val localStudent = studentDao.getStudentById(id)
-        if (localStudent != null) {
-            return Resource.Success(localStudent.toDomain())
-        }
+    override suspend fun getStudentById(id: String): Resource<Student> = withContext(Dispatchers.IO) {
+        try {
+            // Try local first
+            val localStudent = studentDao.getStudentById(id)
+            if (localStudent != null) {
+                return@withContext Resource.Success(localStudent.toDomain())
+            }
 
-        return try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val student = postgrest["students"]
                 .select(columns = Columns.ALL) {
@@ -76,8 +78,8 @@ class StudentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addStudent(student: Student): Resource<Unit> {
-        return try {
+    override suspend fun addStudent(student: Student): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val studentWithId = student.copy(schoolId = schoolId)
             
@@ -93,8 +95,8 @@ class StudentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun bulkAddStudents(students: List<Student>): Resource<Unit> {
-        return try {
+    override suspend fun bulkAddStudents(students: List<Student>): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val studentsWithId = students.map { it.copy(schoolId = schoolId) }
             
@@ -108,8 +110,8 @@ class StudentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateStudent(student: Student): Resource<Unit> {
-        return try {
+    override suspend fun updateStudent(student: Student): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val updatedStudent = student.copy(schoolId = schoolId)
             
@@ -128,8 +130,8 @@ class StudentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteStudent(student: Student): Resource<Unit> {
-        return try {
+    override suspend fun deleteStudent(student: Student): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             
             // Delete local

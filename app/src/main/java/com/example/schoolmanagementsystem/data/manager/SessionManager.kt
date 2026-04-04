@@ -24,6 +24,7 @@ class SessionManager @Inject constructor(
         private val USER_EMAIL = stringPreferencesKey("user_email")
         private val SCHOOL_ID = stringPreferencesKey("school_id")
         private val BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
+        private val THEME_MODE = stringPreferencesKey("theme_mode")
     }
 
     suspend fun saveSession(name: String, email: String, role: UserRole, schoolId: String) {
@@ -49,6 +50,16 @@ class SessionManager @Inject constructor(
 
     val isBiometricEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[BIOMETRIC_ENABLED] ?: false
+    }
+
+    val themeMode: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[THEME_MODE] ?: "SYSTEM"
+    }
+
+    suspend fun setThemeMode(mode: String) {
+        context.dataStore.edit { prefs ->
+            prefs[THEME_MODE] = mode
+        }
     }
 
     suspend fun setBiometricEnabled(enabled: Boolean) {

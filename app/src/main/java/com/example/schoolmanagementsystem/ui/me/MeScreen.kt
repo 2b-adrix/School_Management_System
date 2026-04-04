@@ -1,6 +1,7 @@
 package com.example.schoolmanagementsystem.ui.me
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -33,6 +34,7 @@ import com.example.schoolmanagementsystem.ui.dashboard.DashboardBottomNavigation
 import com.example.schoolmanagementsystem.ui.navigation.Screen
 import com.example.schoolmanagementsystem.ui.profile.ProfileViewModel
 import com.example.schoolmanagementsystem.ui.theme.EliteGoldGradient
+import com.example.schoolmanagementsystem.ui.theme.PremiumBlueGradient
 import com.example.schoolmanagementsystem.ui.theme.glassmorphic
 import com.example.schoolmanagementsystem.ui.theme.spacing
 import kotlinx.coroutines.flow.collectLatest
@@ -66,21 +68,41 @@ fun MeScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFF0F172A), // Premium Deep Slate
         topBar = {
-            TopAppBar(
-                title = { 
+            Column(
+                modifier = Modifier
+                    .background(PremiumBlueGradient)
+                    .statusBarsPadding()
+                    .padding(bottom = 20.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        stringResource(R.string.me), 
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(brush = EliteGoldGradient)
-                    ) 
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.Unspecified
-                )
-            )
+                        stringResource(R.string.me),
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    
+                    Surface(
+                        color = Color.White.copy(alpha = 0.1f),
+                        shape = CircleShape,
+                        onClick = { /* Help */ }
+                    ) {
+                        Icon(
+                            Icons.Rounded.HelpOutline,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.padding(8.dp).size(20.dp)
+                        )
+                    }
+                }
+            }
         },
         bottomBar = {
             DashboardBottomNavigation(currentRoute = Screen.Me.route, onNavigate = onNavigate)
@@ -92,57 +114,80 @@ fun MeScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header Section
+            // Header Section with Glass Card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .background(EliteGoldGradient),
-                contentAlignment = Alignment.BottomCenter
+                    .padding(20.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 24.dp)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassmorphic(
+                            backgroundColor = Color.White.copy(alpha = 0.05f),
+                            borderColor = Color.White.copy(alpha = 0.1f)
+                        ),
+                    shape = RoundedCornerShape(32.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(110.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f))
-                            .padding(2.dp)
-                            .background(Color(0xFF1E1E1E), CircleShape),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(vertical = 32.dp, horizontal = 24.dp).fillMaxWidth()
                     ) {
-                        Icon(
-                            Icons.Rounded.Person, 
-                            contentDescription = null, 
-                            tint = Color(0xFFD4AF37), 
-                            modifier = Modifier.size(70.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .background(EliteGoldGradient)
+                                .padding(3.dp)
+                                .background(Color(0xFF0F172A), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Rounded.Person, 
+                                contentDescription = null, 
+                                tint = Color.White.copy(alpha = 0.9f), 
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        Text(
+                            currentUser?.name ?: profileState.name, 
+                            color = Color.White, 
+                            fontSize = 24.sp, 
+                            fontWeight = FontWeight.Bold
                         )
+                        
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        Surface(
+                            color = Color(0xFFD4AF37).copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFD4AF37).copy(alpha = 0.4f))
+                        ) {
+                            Text(
+                                "ELITE ${currentUser?.role?.name?.uppercase() ?: profileState.subtitle.uppercase()}", 
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                color = Color(0xFFD4AF37), 
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.sp
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        currentUser?.name ?: profileState.name, 
-                        color = Color(0xFF382900), 
-                        fontSize = 24.sp, 
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "Elite ${currentUser?.role?.name ?: profileState.subtitle}", 
-                        color = Color(0xFF382900).copy(alpha = 0.8f), 
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 stringResource(R.string.account_settings).uppercase(),
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.sp),
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.labelSmall.copy(
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFD4AF37)
+                )
             )
 
             SettingsItem(
@@ -154,28 +199,31 @@ fun MeScreen(
             if (authenticator.isBiometricAvailable()) {
                 SettingsItem(
                     icon = Icons.Rounded.Fingerprint,
-                    title = "Biometric Authentication",
-                    subtitle = if (isBiometricEnabled) "Enabled" else "Disabled",
+                    title = "Security & Biometrics",
+                    subtitle = if (isBiometricEnabled) "Authentication active" else "Touch ID disabled",
                     onClick = { authViewModel.setBiometricEnabled(!isBiometricEnabled) }
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 stringResource(R.string.app_preferences).uppercase(),
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.sp),
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.labelSmall.copy(
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFD4AF37)
+                )
             )
 
             SettingsItem(
                 icon = Icons.Rounded.DarkMode,
-                title = stringResource(R.string.theme_mode),
+                title = "Aesthetic Theme",
                 subtitle = when(themeMode) {
-                    "light" -> stringResource(R.string.light_mode)
-                    "dark" -> stringResource(R.string.dark_mode)
-                    else -> stringResource(R.string.system_default)
+                    "light" -> "Platinum Light"
+                    "dark" -> "Elite Charcoal"
+                    else -> "System Default"
                 },
                 onClick = { showThemeDialog = true }
             )
@@ -183,7 +231,7 @@ fun MeScreen(
             SettingsItem(
                 icon = Icons.Rounded.Language,
                 title = stringResource(R.string.language),
-                subtitle = if (languageCode == "en") stringResource(R.string.english) else stringResource(R.string.hindi),
+                subtitle = if (languageCode == "en") "English (Premium)" else "Hindi (Standard)",
                 onClick = { showLanguageDialog = true }
             )
 
@@ -195,10 +243,15 @@ fun MeScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f), contentColor = MaterialTheme.colorScheme.error),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red.copy(alpha = 0.05f), 
+                    contentColor = Color.Red.copy(alpha = 0.8f)
+                ),
                 shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red.copy(alpha = 0.1f))
             ) {
+                Icon(Icons.Rounded.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     stringResource(R.string.logout), 
                     fontWeight = FontWeight.Bold,
@@ -206,24 +259,28 @@ fun MeScreen(
                 )
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-            title = { Text(stringResource(R.string.select_theme), style = TextStyle(brush = EliteGoldGradient)) },
+            containerColor = Color(0xFF1E293B),
+            titleContentColor = Color.White,
+            textContentColor = Color.White.copy(alpha = 0.7f),
+            title = { Text(stringResource(R.string.select_theme), fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     ThemeOption(stringResource(R.string.system_default), "system", themeMode) { mainViewModel.setThemeMode("system"); showThemeDialog = false }
-                    ThemeOption(stringResource(R.string.light_mode), "light", themeMode) { mainViewModel.setThemeMode("light"); showThemeDialog = false }
-                    ThemeOption(stringResource(R.string.dark_mode), "dark", themeMode) { mainViewModel.setThemeMode("dark"); showThemeDialog = false }
+                    ThemeOption("Platinum Light", "light", themeMode) { mainViewModel.setThemeMode("light"); showThemeDialog = false }
+                    ThemeOption("Elite Charcoal", "dark", themeMode) { mainViewModel.setThemeMode("dark"); showThemeDialog = false }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { showThemeDialog = false }) { 
+                    Text(stringResource(R.string.cancel), color = Color(0xFFD4AF37)) 
+                }
             }
         )
     }
@@ -231,8 +288,10 @@ fun MeScreen(
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-            title = { Text(stringResource(R.string.select_language), style = TextStyle(brush = EliteGoldGradient)) },
+            containerColor = Color(0xFF1E293B),
+            titleContentColor = Color.White,
+            textContentColor = Color.White.copy(alpha = 0.7f),
+            title = { Text(stringResource(R.string.select_language), fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     LanguageOption(stringResource(R.string.english), "en", languageCode) { mainViewModel.setLanguageCode("en"); showLanguageDialog = false }
@@ -240,7 +299,9 @@ fun MeScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { showLanguageDialog = false }) { 
+                    Text(stringResource(R.string.cancel), color = Color(0xFFD4AF37)) 
+                }
             }
         )
     }
@@ -256,39 +317,49 @@ fun SettingsItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp)
-            .glassmorphic()
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .glassmorphic(
+                backgroundColor = Color.White.copy(alpha = 0.03f),
+                borderColor = Color.White.copy(alpha = 0.08f)
+            )
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
-                contentAlignment = Alignment.Center
+            Surface(
+                modifier = Modifier.size(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White.copy(alpha = 0.05f)
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(22.dp))
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 )
                 if (subtitle != null) {
-                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = subtitle, 
+                        style = MaterialTheme.typography.bodySmall, 
+                        color = Color.White.copy(alpha = 0.4f)
+                    )
                 }
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline
+                tint = Color.White.copy(alpha = 0.2f)
             )
         }
     }
@@ -300,16 +371,23 @@ fun ThemeOption(text: String, mode: String, currentMode: String, onClick: () -> 
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
             selected = mode == currentMode, 
             onClick = onClick,
-            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFD4AF37))
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Color(0xFFD4AF37),
+                unselectedColor = Color.White.copy(alpha = 0.3f)
+            )
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text, fontWeight = if(mode == currentMode) FontWeight.Bold else FontWeight.Normal)
+        Text(
+            text, 
+            color = Color.White,
+            fontWeight = if(mode == currentMode) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
 
@@ -319,14 +397,21 @@ fun LanguageOption(text: String, code: String, currentCode: String, onClick: () 
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         RadioButton(
             selected = code == currentCode, 
             onClick = onClick,
-            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFD4AF37))
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Color(0xFFD4AF37),
+                unselectedColor = Color.White.copy(alpha = 0.3f)
+            )
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text, fontWeight = if(code == currentCode) FontWeight.Bold else FontWeight.Normal)
+        Text(
+            text, 
+            color = Color.White,
+            fontWeight = if(code == currentCode) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }

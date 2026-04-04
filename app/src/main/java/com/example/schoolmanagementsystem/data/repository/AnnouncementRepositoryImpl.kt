@@ -5,9 +5,9 @@ import com.example.schoolmanagementsystem.domain.model.Announcement
 import com.example.schoolmanagementsystem.domain.repository.AnnouncementRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AnnouncementRepositoryImpl @Inject constructor(
@@ -30,7 +30,7 @@ class AnnouncementRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     override fun getAnnouncementsForStudent(classId: String): Flow<Resource<List<Announcement>>> = flow {
         emit(Resource.Loading())
@@ -53,10 +53,10 @@ class AnnouncementRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun addAnnouncement(announcement: Announcement): Resource<Unit> {
-        return try {
+    override suspend fun addAnnouncement(announcement: Announcement): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val announcementWithSchoolId = announcement.copy(schoolId = schoolId)
             postgrest["announcements"].insert(announcementWithSchoolId)
@@ -66,8 +66,8 @@ class AnnouncementRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateAnnouncement(announcement: Announcement): Resource<Unit> {
-        return try {
+    override suspend fun updateAnnouncement(announcement: Announcement): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["announcements"].update(announcement.copy(schoolId = schoolId)) {
                 filter {
@@ -81,8 +81,8 @@ class AnnouncementRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAnnouncement(id: String): Resource<Unit> {
-        return try {
+    override suspend fun deleteAnnouncement(id: String): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["announcements"].delete {
                 filter {

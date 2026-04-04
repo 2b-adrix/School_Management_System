@@ -5,9 +5,12 @@ import com.example.schoolmanagementsystem.domain.model.Subject
 import com.example.schoolmanagementsystem.domain.repository.SubjectRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SubjectRepositoryImpl @Inject constructor(
@@ -29,10 +32,10 @@ class SubjectRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun getSubjectById(id: String): Resource<Subject> {
-        return try {
+    override suspend fun getSubjectById(id: String): Resource<Subject> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val subject = postgrest["subjects"]
                 .select {
@@ -48,8 +51,8 @@ class SubjectRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addSubject(subject: Subject): Resource<Unit> {
-        return try {
+    override suspend fun addSubject(subject: Subject): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val subjectWithSchoolId = subject.copy(schoolId = schoolId)
             postgrest["subjects"].insert(subjectWithSchoolId)
@@ -59,8 +62,8 @@ class SubjectRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateSubject(subject: Subject): Resource<Unit> {
-        return try {
+    override suspend fun updateSubject(subject: Subject): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["subjects"].update(subject.copy(schoolId = schoolId)) {
                 filter {
@@ -74,8 +77,8 @@ class SubjectRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteSubject(subject: Subject): Resource<Unit> {
-        return try {
+    override suspend fun deleteSubject(subject: Subject): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["subjects"].delete {
                 filter {

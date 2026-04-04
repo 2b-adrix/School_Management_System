@@ -1,28 +1,29 @@
 package com.example.schoolmanagementsystem.data.service
 
-import android.content.Context
 import android.graphics.Bitmap
-import com.example.schoolmanagementsystem.domain.model.Student
+import com.example.schoolmanagementsystem.BuildConfig
+import com.example.schoolmanagementsystem.data.model.*
 import com.example.schoolmanagementsystem.domain.service.AttendanceAIService
 import com.example.schoolmanagementsystem.domain.util.Resource
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jan.supabase.postgrest.Postgrest
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
-import kotlin.math.sqrt
 
 class AttendanceAIServiceImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val postgrest: Postgrest
+    private val client: HttpClient
 ) : AttendanceAIService {
 
     // 1. Face Detection Setup
@@ -41,21 +42,19 @@ class AttendanceAIServiceImpl @Inject constructor(
             .build()
     )
 
-    // 3. Gemini Setup (Add your API Key here later)
-    private val generativeModel = GenerativeModel(
-        modelName = "gemini-1.5-flash",
-        apiKey = "YOUR_GEMINI_API_KEY"
-    )
+    // 3. Gemini REST Setup
+    private val apiKey = BuildConfig.GEMINI_API_KEY
+    private val model = "gemini-1.5-flash"
 
-    override suspend fun recognizeStudentsFromImage(bitmap: Bitmap): Resource<List<String>> {
-        return try {
+    override suspend fun recognizeStudentsFromImage(bitmap: Bitmap): Resource<List<String>> = withContext(Dispatchers.IO) {
+        try {
             val image = InputImage.fromBitmap(bitmap, 0)
             val faces = faceDetector.process(image).await()
             
-            if (faces.isEmpty()) return Resource.Error("No faces detected")
+            if (faces.isEmpty()) return@withContext Resource.Error("No faces detected")
 
             // Fetch all students with face embeddings from Supabase
-            val studentsResult = postgrest["students"].select().decodeList<Student>()
+            // val studentsResult = postgrest["students"].select().decodeList<Student>()
             val identifiedIds = mutableListOf<String>()
 
             // Simple Euclidean distance for face matching (Placeholder logic)
@@ -71,8 +70,8 @@ class AttendanceAIServiceImpl @Inject constructor(
         }
     }
 
-    override suspend fun scanAttendanceQR(bitmap: Bitmap): Resource<String> {
-        return try {
+    override suspend fun scanAttendanceQR(bitmap: Bitmap): Resource<String> = withContext(Dispatchers.IO) {
+        try {
             val image = InputImage.fromBitmap(bitmap, 0)
             val barcodes = qrScanner.process(image).await()
             val qrCode = barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
@@ -88,18 +87,26 @@ class AttendanceAIServiceImpl @Inject constructor(
     override suspend fun processVoiceAttendance(
         audioFile: File,
         studentList: List<String>
-    ): Resource<List<String>> {
-        return try {
-            // Convert audio to content for Gemini
-            val response = generativeModel.generateContent(
-                content {
-                    text("The following students are present in the roll call audio. " +
-                            "Compare with this list: $studentList and return only the IDs of present students as a comma-separated list.")
-                    // blob("audio/mp3", audioFile.readBytes()) // Requires experimental audio support
-                }
-            )
+    ): Resource<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            val audioBytes = audioFile.readBytes()
+            val base64Audio = android.util.Base64.encodeToString(audioBytes, android.util.Base64.NO_WRAP)
             
-            val ids = response.text?.split(",")?.map { it.trim() } ?: emptyList()
+            val prompt = "Identify which students from this list are mentioned as 'present' in the audio: $studentList. Return only their IDs as a comma-separated list."
+
+            val response: GeminiResponse = client.post("${model}:generateContent") {
+                parameter("key", apiKey)
+                setBody(GeminiRequest(
+                    contents = listOf(Content(parts = listOf(
+                        Part(text = prompt),
+                        Part(inlineData = InlineData(mimeType = "audio/wav", data = base64Audio))
+                    )))
+                ))
+                contentType(ContentType.Application.Json)
+            }.body()
+
+            val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+            val ids = text?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
             Resource.Success(ids)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Voice processing failed")

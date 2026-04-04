@@ -9,7 +9,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -17,10 +20,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,7 +38,7 @@ import com.example.schoolmanagementsystem.ui.components.EliteAIInsightCard
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun DashboardScreen(
     onNavigate: (String) -> Unit,
@@ -43,6 +48,8 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState()
+    var showActionSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
@@ -105,21 +112,6 @@ fun DashboardScreen(
                             viewModel.logout()
                         } 
                     }
-                    
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            contentAlignment = Alignment.BottomStart
-                        ) {
-                            Text(
-                                "Version 2.0.1",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -138,7 +130,7 @@ fun DashboardScreen(
                                 )
                             )
                             Text(
-                                "Welcome to your elite dashboard",
+                                "Elite Academic Management",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -157,14 +149,15 @@ fun DashboardScreen(
                         }
                         IconButton(onClick = { onNavigate(Screen.Me.route) }) {
                             Surface(
-                                modifier = Modifier.size(32.dp),
+                                modifier = Modifier.size(36.dp),
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primaryContainer
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, EliteGoldGradient)
                             ) {
                                 Icon(
                                     Icons.Rounded.Person, 
                                     contentDescription = "Profile",
-                                    modifier = Modifier.padding(4.dp),
+                                    modifier = Modifier.padding(6.dp),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
@@ -176,10 +169,19 @@ fun DashboardScreen(
                     )
                 )
             },
-            bottomBar = {
-                if (state.user?.role == UserRole.STUDENT) {
-                    DashboardBottomNavigation(currentRoute = Screen.Dashboard.route, onNavigate = onNavigate)
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { showActionSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.shadow(8.dp, RoundedCornerShape(16.dp))
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Quick Action")
                 }
+            },
+            bottomBar = {
+                DashboardBottomNavigation(currentRoute = Screen.Dashboard.route, onNavigate = onNavigate)
             }
         ) { padding ->
             Box(modifier = Modifier.padding(padding)) {
@@ -189,8 +191,77 @@ fun DashboardScreen(
                     UserRole.STUDENT -> StudentDashboard(state, onNavigate)
                     else -> if (state.isLoading) LoadingScreen() else EmptyDashboard()
                 }
+
+                if (showActionSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showActionSheet = false },
+                        sheetState = sheetState,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        dragHandle = { BottomSheetDefaults.DragHandle() }
+                    ) {
+                        QuickActionMenu(onNavigate) { showActionSheet = false }
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+fun QuickActionMenu(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+            .navigationBarsPadding()
+    ) {
+        Text(
+            "Quick Actions",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            QuickActionButton("Message", Icons.Rounded.Chat, Modifier.weight(1f)) {
+                onDismiss()
+                onNavigate(Screen.Messages.route)
+            }
+            QuickActionButton("Attendance", Icons.Rounded.QrCodeScanner, Modifier.weight(1f)) {
+                onDismiss()
+                onNavigate(Screen.AttendanceClassSelect.route)
+            }
+            QuickActionButton("Fees", Icons.Rounded.AccountBalanceWallet, Modifier.weight(1f)) {
+                onDismiss()
+                onNavigate(Screen.FeeList.route)
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+fun QuickActionButton(label: String, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Column(
+        modifier = modifier.clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            modifier = Modifier.size(64.dp),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.padding(16.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium)
     }
 }
 
@@ -238,94 +309,131 @@ fun DrawerHeader(state: DashboardViewModel.DashboardState) {
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun StudentDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String) -> Unit) {
+    val pagerState = rememberPagerState(pageCount = { 3 })
+    
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(bottom = 80.dp), // Space for FAB/BottomBar
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Elite Stats Pager (UX: Glanceable Metrics)
+        item {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentPadding = PaddingValues(horizontal = 32.dp),
+                pageSpacing = 16.dp
+            ) { page ->
+                when(page) {
+                    0 -> MetricCard("Attendance", "85%", Icons.Rounded.PieChart, Color(0xFF4CAF50))
+                    1 -> MetricCard("Fees Due", "$ ${state.feeDuesAmount}", Icons.Rounded.AccountBalanceWallet, Color(0xFFFF9800))
+                    2 -> MetricCard("Academic Rank", "#4 / 42", Icons.Rounded.EmojiEvents, Color(0xFFD4AF37))
+                }
+            }
+        }
+
         // AI Insight Section
         item {
             EliteAIInsightCard(
                 insight = state.aiInsight,
-                isLoading = state.isAILoading
+                isLoading = state.isAILoading,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
-        }
-
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glassmorphic(),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Fees Due", style = MaterialTheme.typography.labelLarge)
-                        Text(
-                            "$ ${state.feeDuesAmount}", 
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                brush = EliteGoldGradient,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            onClick = { onNavigate(Screen.FeeList.route) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                            modifier = Modifier.height(32.dp)
-                        ) {
-                            Text("Pay Now", style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-                    Icon(
-                        Icons.Rounded.Payments,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    )
-                }
-            }
         }
 
         item {
             Text(
                 "Quick Actions",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ActionCard("Attendance", Icons.Rounded.FactCheck, Color(0xFF4CAF50), Modifier.weight(1f)) { onNavigate(Screen.AttendanceClassSelect.route) }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 ActionCard("Timetable", Icons.AutoMirrored.Rounded.EventNote, Color(0xFF2196F3), Modifier.weight(1f)) { onNavigate(Screen.TimetableList.route) }
+                ActionCard("Assignments", Icons.Rounded.AssignmentInd, Color(0xFF9C27B0), Modifier.weight(1f)) { onNavigate(Screen.Assignments.route) }
             }
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ActionCard("Exams", Icons.Rounded.Assignment, Color(0xFFFF9800), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
-                ActionCard("Results", Icons.Rounded.Grade, Color(0xFF9C27B0), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ActionCard("Exams", Icons.Rounded.Assignment, Color(0xFFFF5722), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
+                ActionCard("Library", Icons.Rounded.MenuBook, Color(0xFF607D8B), Modifier.weight(1f)) { onNavigate(Screen.Library.route) }
             }
         }
 
-        item {
+        if (state.notices.isNotEmpty()) {
+            item {
+                Text(
+                    "Announcements",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                )
+            }
+
+            items(state.notices) { notice ->
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    NoticeItemCard(notice) {
+                        onNavigate(Screen.NotificationList.route)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MetricCard(title: String, value: String, icon: ImageVector, color: Color) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .glassmorphic(),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = color.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(8.dp))
+                }
+                Text(
+                    title,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Text(
-                "Recent Announcements",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(top = 8.dp)
+                value,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    brush = if (color == Color(0xFFD4AF37)) EliteGoldGradient else null
+                ),
+                color = if (color != Color(0xFFD4AF37)) color else Color.Unspecified
             )
-        }
-
-        items(state.notices) { notice ->
-            NoticeItemCard(notice)
         }
     }
 }
@@ -455,9 +563,12 @@ fun DrawerItem(
 }
 
 @Composable
-fun NoticeItemCard(notice: DashboardViewModel.Notice) {
+fun NoticeItemCard(notice: DashboardViewModel.Notice, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().glassmorphic(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .glassmorphic()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)

@@ -6,9 +6,9 @@ import com.example.schoolmanagementsystem.domain.model.FeeStructure
 import com.example.schoolmanagementsystem.domain.repository.FeeRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class FeeRepositoryImpl @Inject constructor(
@@ -31,10 +31,10 @@ class FeeRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun addFeeStructure(feeStructure: FeeStructure): Resource<Unit> {
-        return try {
+    override suspend fun addFeeStructure(feeStructure: FeeStructure): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val structureWithSchoolId = feeStructure.copy(schoolId = schoolId)
             postgrest["fee_structures"].insert(structureWithSchoolId)
@@ -44,8 +44,8 @@ class FeeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateFeeStructure(feeStructure: FeeStructure): Resource<Unit> {
-        return try {
+    override suspend fun updateFeeStructure(feeStructure: FeeStructure): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["fee_structures"].update(feeStructure.copy(schoolId = schoolId)) {
                 filter {
@@ -59,8 +59,8 @@ class FeeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteFeeStructure(feeStructure: FeeStructure): Resource<Unit> {
-        return try {
+    override suspend fun deleteFeeStructure(feeStructure: FeeStructure): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["fee_structures"].delete {
                 filter {
@@ -90,10 +90,10 @@ class FeeRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun addPayment(payment: FeePayment): Resource<Unit> {
-        return try {
+    override suspend fun addPayment(payment: FeePayment): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val paymentWithSchoolId = payment.copy(schoolId = schoolId)
             postgrest["fee_payments"].insert(paymentWithSchoolId)
@@ -103,8 +103,8 @@ class FeeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deletePayment(payment: FeePayment): Resource<Unit> {
-        return try {
+    override suspend fun deletePayment(payment: FeePayment): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["fee_payments"].delete {
                 filter {

@@ -13,8 +13,8 @@ interface ClassDao {
     fun getAllClasses(): Flow<List<ClassEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertClass(schoolClass: ClassEntity): Long
+    suspend fun insertClass(schoolClass: ClassEntity): Long
 
     @Query("SELECT * FROM classes WHERE id = :id")
-    fun getClassById(id: String): ClassEntity?
+    suspend fun getClassById(id: String): ClassEntity?
 }

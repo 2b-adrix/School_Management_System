@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.secrets)
 }
 
 android {
@@ -39,9 +41,7 @@ android {
 
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
+        buildConfig = true
     }
     packaging {
         resources {
@@ -58,18 +58,34 @@ kotlin {
     }
 }
 
-dependencies {
-    constraints {
-        val ktorVersion = libs.versions.ktor.get()
-        implementation("io.ktor:ktor-client-core:$ktorVersion")
-        implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
-        implementation("io.ktor:ktor-client-android:$ktorVersion")
-        implementation("io.ktor:ktor-client-logging:$ktorVersion")
-        implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-        implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-        implementation("io.ktor:ktor-utils:$ktorVersion")
-        implementation("io.ktor:ktor-http:$ktorVersion")
+// Force version alignment to fix library conflicts
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.ktor") {
+            useVersion(libs.versions.ktor.get())
+        }
+        if (requested.group == "org.jetbrains.kotlin") {
+             useVersion(libs.versions.kotlin.get())
+        }
+        if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-serialization")) {
+             useVersion("1.7.3") // Stable for Ktor 3.0.3
+        }
     }
+}
+
+dependencies {
+    // Ktor - Forcing the version from catalog
+    implementation(platform(libs.ktor.bom))
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.auth)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation("io.ktor:ktor-client-plugins:${libs.versions.ktor.get()}")
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.utils)
+    implementation(libs.ktor.http)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -82,7 +98,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
-    
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -104,19 +120,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
 
-    // Supabase
+    // Supabase (Bom version 3.0.1 or higher uses Ktor 3)
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
     implementation(libs.supabase.storage)
-
-    // Ktor
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.client.android)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
 
     // Image Loading & PDF
     implementation(libs.coil.compose)
@@ -125,9 +133,6 @@ dependencies {
     // AI & ML Kit
     implementation(libs.mlkit.face.detection)
     implementation(libs.mlkit.barcode.scanning)
-    implementation(libs.google.ai.client) {
-        exclude(group = "io.ktor")
-    }
 
     // CameraX
     implementation(libs.androidx.camera.core)
@@ -160,5 +165,3 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
-
-

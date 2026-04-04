@@ -16,6 +16,20 @@ val EliteGoldGradient = Brush.linearGradient(
     )
 )
 
+val PremiumBlueGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF1A237E), // Deep Blue
+        Color(0xFF3949AB)  // Royal Blue
+    )
+)
+
+val PremiumSurfaceGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color.White.copy(alpha = 0.08f),
+        Color.White.copy(alpha = 0.02f)
+    )
+)
+
 // Glassmorphic Modifier
 fun Modifier.glassmorphic(
     backgroundColor: Color = Color.White.copy(alpha = 0.05f),

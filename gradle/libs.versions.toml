@@ -1,6 +1,6 @@
 [versions]
-agp = "8.7.3"
-kotlin = "1.9.24"
+agp = "8.13.2"
+kotlin = "2.1.10"
 coreKtx = "1.12.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -16,19 +16,21 @@ room = "2.6.1"
 datastore = "1.1.1"
 navigationCompose = "2.8.4"
 coroutines = "1.8.1"
-supabase = "3.0.2"
-ktor = "2.3.12"
+supabase = "3.1.0"
+ktor = "3.0.3"
 coil = "2.7.0"
 openpdf = "1.3.38"
-ksp = "1.9.24-1.0.20"
+ksp = "2.1.10-1.0.30"
 camerax = "1.4.1"
 mlkitFaceDetection = "16.1.7"
 mlkitBarcodeScanning = "17.3.0"
-googleAi = "0.9.0"
+firebaseVertexAi = "16.5.0"
+googleAiGenerativeAi = "0.9.0"
 lottie = "6.6.0"
 splashscreen = "1.0.1"
 biometric = "1.2.0-alpha05"
 workManager = "2.10.0"
+secrets = "2.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,12 +69,17 @@ supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt" }
 supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt" }
 
 # Ktor
+ktor-bom = { group = "io.ktor", name = "ktor-bom", version.ref = "ktor" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
+ktor-client-auth = { group = "io.ktor", name = "ktor-client-auth", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-plugins = { group = "io.ktor", name = "ktor-client-plugins", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-utils = { group = "io.ktor", name = "ktor-utils", version.ref = "ktor" }
+ktor-http = { group = "io.ktor", name = "ktor-http", version.ref = "ktor" }
 
 # Image Loading & PDF
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
@@ -82,7 +89,8 @@ openpdf = { group = "com.github.LibrePDF", name = "OpenPDF", version.ref = "open
 # AI & ML Kit
 mlkit-face-detection = { group = "com.google.mlkit", name = "face-detection", version.ref = "mlkitFaceDetection" }
 mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcodeScanning" }
-google-ai-client = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "googleAi" }
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "googleAiGenerativeAi" }
+firebase-vertexai = { group = "com.google.firebase", name = "firebase-vertexai", version.ref = "firebaseVertexAi" }
 
 # CameraX
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
@@ -108,3 +116,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }

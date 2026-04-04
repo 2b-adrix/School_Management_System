@@ -5,9 +5,12 @@ import com.example.schoolmanagementsystem.domain.model.ChatMessage
 import com.example.schoolmanagementsystem.domain.repository.MessageRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class MessageRepositoryImpl @Inject constructor(
@@ -34,7 +37,7 @@ class MessageRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     override fun getChatMessages(senderId: String, receiverId: String): Flow<Resource<List<ChatMessage>>> = flow {
         emit(Resource.Loading())
@@ -61,10 +64,10 @@ class MessageRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun sendMessage(message: ChatMessage): Resource<Unit> {
-        return try {
+    override suspend fun sendMessage(message: ChatMessage): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["messages"].insert(message.copy(schoolId = schoolId))
             Resource.Success(Unit)
@@ -73,8 +76,8 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun markAsRead(messageId: String): Resource<Unit> {
-        return try {
+    override suspend fun markAsRead(messageId: String): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["messages"].update({
                 set("is_read", true)

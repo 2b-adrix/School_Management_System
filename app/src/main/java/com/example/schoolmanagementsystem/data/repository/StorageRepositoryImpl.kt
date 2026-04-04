@@ -16,7 +16,9 @@ class StorageRepositoryImpl @Inject constructor(
     ): Resource<String> {
         return try {
             val bucket = supabaseStorage.from(bucketName)
-            bucket.upload(path, imageBytes, upsert = true)
+            bucket.upload(path, imageBytes) {
+                upsert = true
+            }
             Resource.Success(path)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to upload image")

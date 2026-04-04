@@ -9,9 +9,12 @@ import com.example.schoolmanagementsystem.domain.repository.AuthRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -23,8 +26,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val userDao: UserDao
 ) : AuthRepository {
 
-    override suspend fun login(email: String, password: String): Resource<User> {
-        return try {
+    override suspend fun login(email: String, password: String): Resource<User> = withContext(Dispatchers.IO) {
+        try {
             supabaseAuth.signInWith(Email) {
                 this.email = email
                 this.password = password
@@ -62,7 +65,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun logout() {
+    override suspend fun logout() = withContext(Dispatchers.IO) {
         try {
             supabaseAuth.signOut()
             userDao.deleteUser()
@@ -74,7 +77,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override fun getCurrentUser(): Flow<User?> {
         // Excellent Backend: Reactive flow from local cache
-        return userDao.getUser().map { it?.toUser() }
+        return userDao.getUser().map { it?.toUser() }.flowOn(Dispatchers.IO)
     }
 
     override suspend fun signUp(
@@ -83,8 +86,8 @@ class AuthRepositoryImpl @Inject constructor(
         role: UserRole,
         fullName: String,
         schoolId: String
-    ): Resource<User> {
-        return try {
+    ): Resource<User> = withContext(Dispatchers.IO) {
+        try {
             supabaseAuth.signUpWith(Email) {
                 this.email = email
                 this.password = password

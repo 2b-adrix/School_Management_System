@@ -8,7 +8,9 @@ import com.example.schoolmanagementsystem.domain.model.SchoolClass
 import com.example.schoolmanagementsystem.domain.repository.ClassRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ClassRepositoryImpl @Inject constructor(
@@ -47,15 +49,15 @@ class ClassRepositoryImpl @Inject constructor(
                 emit(Resource.Error(e.message ?: "An error occurred"))
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun getClassById(id: String): Resource<SchoolClass> {
+    override suspend fun getClassById(id: String): Resource<SchoolClass> = withContext(Dispatchers.IO) {
         val localClass = classDao.getClassById(id)
         if (localClass != null) {
-            return Resource.Success(localClass.toDomain())
+            return@withContext Resource.Success(localClass.toDomain())
         }
 
-        return try {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val schoolClass = postgrest["classes"]
                 .select {
@@ -73,8 +75,8 @@ class ClassRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addClass(schoolClass: SchoolClass): Resource<Unit> {
-        return try {
+    override suspend fun addClass(schoolClass: SchoolClass): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val classWithId = schoolClass.copy(schoolId = schoolId)
             
@@ -87,8 +89,8 @@ class ClassRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateClass(schoolClass: SchoolClass): Resource<Unit> {
-        return try {
+    override suspend fun updateClass(schoolClass: SchoolClass): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val updatedClass = schoolClass.copy(schoolId = schoolId)
             
@@ -106,8 +108,8 @@ class ClassRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteClass(schoolClass: SchoolClass): Resource<Unit> {
-        return try {
+    override suspend fun deleteClass(schoolClass: SchoolClass): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             
             // Note: In a real app, delete locally too

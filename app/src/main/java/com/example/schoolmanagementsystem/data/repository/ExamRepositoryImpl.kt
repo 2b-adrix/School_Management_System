@@ -6,9 +6,12 @@ import com.example.schoolmanagementsystem.domain.model.Result
 import com.example.schoolmanagementsystem.domain.repository.ExamRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ExamRepositoryImpl @Inject constructor(
@@ -32,10 +35,10 @@ class ExamRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun addExam(exam: Exam): Resource<Unit> {
-        return try {
+    override suspend fun addExam(exam: Exam): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val examWithSchoolId = exam.copy(schoolId = schoolId)
             postgrest["exams"].insert(examWithSchoolId)
@@ -45,8 +48,8 @@ class ExamRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateExam(exam: Exam): Resource<Unit> {
-        return try {
+    override suspend fun updateExam(exam: Exam): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["exams"].update(exam.copy(schoolId = schoolId)) {
                 filter {
@@ -60,8 +63,8 @@ class ExamRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteExam(exam: Exam): Resource<Unit> {
-        return try {
+    override suspend fun deleteExam(exam: Exam): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             postgrest["exams"].delete {
                 filter {
@@ -91,10 +94,10 @@ class ExamRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun addResult(result: Result): Resource<Unit> {
-        return try {
+    override suspend fun addResult(result: Result): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val resultWithSchoolId = result.copy(schoolId = schoolId)
             postgrest["results"].insert(resultWithSchoolId)
@@ -120,5 +123,5 @@ class ExamRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }

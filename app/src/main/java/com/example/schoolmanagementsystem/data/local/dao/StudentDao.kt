@@ -18,14 +18,14 @@ interface StudentDao {
     fun getStudentsByClass(className: String): Flow<List<StudentEntity>>
 
     @Query("SELECT * FROM students WHERE id = :id")
-    fun getStudentById(id: String): StudentEntity?
+    suspend fun getStudentById(id: String): StudentEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertStudent(student: StudentEntity): Long
+    suspend fun insertStudent(student: StudentEntity): Long
 
     @Update
-    fun updateStudent(student: StudentEntity): Int
+    suspend fun updateStudent(student: StudentEntity): Int
 
     @Delete
-    fun deleteStudent(student: StudentEntity): Int
+    suspend fun deleteStudent(student: StudentEntity): Int
 }

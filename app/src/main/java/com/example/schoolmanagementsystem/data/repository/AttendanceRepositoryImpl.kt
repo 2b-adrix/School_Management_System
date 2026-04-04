@@ -8,7 +8,9 @@ import com.example.schoolmanagementsystem.domain.model.AttendanceRecord
 import com.example.schoolmanagementsystem.domain.repository.AttendanceRepository
 import com.example.schoolmanagementsystem.domain.util.Resource
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AttendanceRepositoryImpl @Inject constructor(
@@ -45,10 +47,10 @@ class AttendanceRepositoryImpl @Inject constructor(
                 emit(Resource.Error(e.message ?: "An error occurred"))
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun saveAttendance(records: List<AttendanceRecord>): Resource<Unit> {
-        return try {
+    override suspend fun saveAttendance(records: List<AttendanceRecord>): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
             val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
             val recordsWithSchoolId = records.map { it.copy(schoolId = schoolId) }
             
@@ -92,5 +94,5 @@ class AttendanceRepositoryImpl @Inject constructor(
                 emit(Resource.Error(e.message ?: "An error occurred"))
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }
