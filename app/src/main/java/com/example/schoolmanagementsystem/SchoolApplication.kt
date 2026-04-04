@@ -3,7 +3,7 @@ package com.example.schoolmanagementsystem
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
-import com.example.schoolmanagementsystem.data.worker.AttendanceSyncWorker
+import com.example.schoolmanagementsystem.backend.data.worker.AttendanceSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject

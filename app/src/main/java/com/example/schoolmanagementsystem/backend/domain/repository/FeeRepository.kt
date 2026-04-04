@@ -1,0 +1,17 @@
+package com.example.schoolmanagementsystem.backend.domain.repository
+
+import com.example.schoolmanagementsystem.backend.domain.model.FeePayment
+import com.example.schoolmanagementsystem.backend.domain.model.FeeStructure
+import com.example.schoolmanagementsystem.backend.domain.util.Resource
+import kotlinx.coroutines.flow.Flow
+
+interface FeeRepository {
+    fun getFeeStructures(): Flow<Resource<List<FeeStructure>>>
+    suspend fun addFeeStructure(feeStructure: FeeStructure): Resource<Unit>
+    suspend fun updateFeeStructure(feeStructure: FeeStructure): Resource<Unit>
+    suspend fun deleteFeeStructure(feeStructure: FeeStructure): Resource<Unit>
+    fun getPaymentsByStudent(studentId: String): Flow<Resource<List<FeePayment>>>
+    suspend fun addPayment(payment: FeePayment): Resource<Unit>
+    suspend fun deletePayment(payment: FeePayment): Resource<Unit>
+}
+

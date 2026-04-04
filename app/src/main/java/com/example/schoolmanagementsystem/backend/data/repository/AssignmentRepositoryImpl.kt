@@ -1,0 +1,78 @@
+package com.example.schoolmanagementsystem.backend.data.repository
+
+import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.domain.model.Assignment
+import com.example.schoolmanagementsystem.backend.domain.repository.AssignmentRepository
+import com.example.schoolmanagementsystem.backend.domain.util.Resource
+import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
+
+class AssignmentRepositoryImpl @Inject constructor(
+    private val postgrest: Postgrest,
+    private val sessionManager: SessionManager
+) : AssignmentRepository {
+
+    override fun getAllAssignments(): Flow<Resource<List<Assignment>>> = flow {
+        emit(Resource.Loading())
+        try {
+            val schoolId = sessionManager.schoolId.firstOrNull()
+            val assignments = postgrest["assignments"]
+                .select {
+                    filter {
+                        eq("school_id", schoolId ?: "")
+                    }
+                }
+                .decodeList<Assignment>()
+            emit(Resource.Success(assignments))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "An error occurred"))
+        }
+    }
+
+    override suspend fun createAssignment(assignment: Assignment): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["assignments"].insert(assignment.copy(schoolId = schoolId))
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to create assignment")
+        }
+    }
+
+    override suspend fun deleteAssignment(id: String): Resource<Unit> {
+        return try {
+            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
+            postgrest["assignments"].delete {
+                filter {
+                    eq("id", id)
+                    eq("school_id", schoolId)
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to delete assignment")
+        }
+    }
+
+    override fun getAssignmentsForClass(classId: String): Flow<Resource<List<Assignment>>> = flow {
+        emit(Resource.Loading())
+        try {
+            val schoolId = sessionManager.schoolId.firstOrNull()
+            val assignments = postgrest["assignments"]
+                .select {
+                    filter {
+                        eq("school_id", schoolId ?: "")
+                        eq("class_id", classId)
+                    }
+                }
+                .decodeList<Assignment>()
+            emit(Resource.Success(assignments))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "An error occurred"))
+        }
+    }
+}
+

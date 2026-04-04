@@ -1,0 +1,40 @@
+package com.example.schoolmanagementsystem.backend.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.example.schoolmanagementsystem.backend.domain.model.Result
+
+@Entity(tableName = "results")
+data class ResultEntity(
+    @PrimaryKey val id: String,
+    val schoolId: String,
+    val examId: String,
+    val studentId: String,
+    val subjectId: String,
+    val marksObtained: Int,
+    val grade: String,
+    val remarks: String?
+)
+
+fun ResultEntity.toDomain() = Result(
+    id = id,
+    schoolId = schoolId,
+    examId = examId,
+    studentId = studentId,
+    subjectId = subjectId,
+    marksObtained = marksObtained,
+    grade = grade,
+    remarks = remarks
+)
+
+fun Result.toEntity() = ResultEntity(
+    id = id,
+    schoolId = schoolId,
+    examId = examId,
+    studentId = studentId,
+    subjectId = subjectId,
+    marksObtained = marksObtained,
+    grade = grade,
+    remarks = remarks
+)
+
