@@ -6,14 +6,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Fingerprint
+import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,19 +30,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
-import com.example.schoolmanagementsystem.frontend.ui.theme.spacing
 import kotlinx.coroutines.flow.collectLatest
 
 enum class LoginType {
     STUDENT, TEACHER, ADMIN
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -63,63 +63,49 @@ fun LoginScreen(
                 is AuthViewModel.UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
-                is AuthViewModel.UiEvent.Logout -> { /* No-op on login screen */ }
+                is AuthViewModel.UiEvent.Logout -> { }
             }
         }
     }
 
     Scaffold(
+        containerColor = Color(0xFF090C0E),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF1A1A1A), // Deep Charcoal
-                            Color(0xFF121212)
-                        )
-                    )
-                )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(spacing().spacing6)
+                    .padding(horizontal = 32.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Elite Logo Section
+                // Siksha Logo
                 Surface(
                     modifier = Modifier.size(100.dp),
                     shape = RoundedCornerShape(24.dp),
-                    color = Color.Transparent
+                    color = Color.Transparent,
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFFFD54F))
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(EliteGoldGradient)
-                            .padding(2.dp)
-                            .background(Color(0xFF121212), RoundedCornerShape(22.dp)),
+                        modifier = Modifier.fillMaxSize().padding(12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = when(loginType) {
-                                LoginType.STUDENT -> Icons.Default.School
-                                LoginType.TEACHER -> Icons.Default.Person
-                                LoginType.ADMIN -> Icons.Default.AdminPanelSettings
-                            },
+                            imageVector = Icons.Rounded.School,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = Color(0xFFD4AF37) // Elite Gold
+                            modifier = Modifier.size(56.dp),
+                            tint = Color(0xFFFFD54F)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(spacing().spacing6))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 AnimatedContent(
                     targetState = loginType,
@@ -133,184 +119,176 @@ fun LoginScreen(
                                 LoginType.TEACHER -> "SIKSHA Faculty"
                                 LoginType.ADMIN -> "SIKSHA Admin"
                             },
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                brush = EliteGoldGradient,
+                            style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 2.sp
+                                color = Color(0xFFFFD54F),
+                                letterSpacing = 0.5.sp
                             )
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = when(targetType) {
-                                LoginType.STUDENT -> "Access your premium dashboard"
-                                LoginType.TEACHER -> "Manage your classes and students"
-                                LoginType.ADMIN -> "School administration portal"
-                            },
+                            text = "Access your premium dashboard",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = Color.Gray
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(spacing().spacing8))
+                Spacer(modifier = Modifier.height(48.dp))
 
-                // Glassmorphic Login Form
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .glassmorphic(),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    shape = RoundedCornerShape(24.dp)
+                // Login Form
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = email,
-                            onValueChange = { email = it },
-                            label = { Text("Email Address", color = Color.White.copy(alpha = 0.7f)) },
-                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFFD4AF37)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFD4AF37),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFD4AF37),
-                                focusedLabelColor = Color(0xFFD4AF37)
-                            )
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = { Text("Email Address", color = Color.Gray) },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFFFFD54F)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFFFD54F),
+                            unfocusedBorderColor = Color.DarkGray,
+                            cursorColor = Color(0xFFFFD54F),
+                            focusedContainerColor = Color(0xFF111619),
+                            unfocusedContainerColor = Color(0xFF111619),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         )
+                    )
 
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text("Password", color = Color.White.copy(alpha = 0.7f)) },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFD4AF37)) },
-                            trailingIcon = {
-                                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                                    Icon(
-                                        imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = null,
-                                        tint = Color.White.copy(alpha = 0.5f)
-                                    )
-                                }
-                            },
-                            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFD4AF37),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFD4AF37),
-                                focusedLabelColor = Color(0xFFD4AF37)
-                            )
-                        )
-
-                        TextButton(
-                            onClick = { /* Handle forgot password */ },
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            Text(
-                                "Forgot Password?",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = Color(0xFFD4AF37)
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Button(
-                                onClick = { viewModel.login(email, password) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(56.dp)
-                                    .background(EliteGoldGradient, RoundedCornerShape(12.dp)),
-                                shape = RoundedCornerShape(12.dp),
-                                enabled = loginState !is Resource.Loading,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = Color(0xFF382900)
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = { Text("Password", color = Color.Gray) },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFFFD54F)) },
+                        trailingIcon = {
+                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (isPasswordVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color.Gray
                                 )
+                            }
+                        },
+                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFFFD54F),
+                            unfocusedBorderColor = Color.DarkGray,
+                            cursorColor = Color(0xFFFFD54F),
+                            focusedContainerColor = Color(0xFF111619),
+                            unfocusedContainerColor = Color(0xFF111619),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
+                    )
+
+                    TextButton(
+                        onClick = { /* Handle forgot password */ },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(
+                            "Forgot Password?",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color(0xFFFFD54F)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { viewModel.login(email, password) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(58.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            enabled = loginState !is Resource.Loading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = Color.Black
+                            ),
+                            contentPadding = PaddingValues()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            colors = listOf(Color(0xFFE6AF2E), Color(0xFFFFD54F))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
                                 if (loginState is Resource.Loading) {
-                                    CircularProgressIndicator(
-                                        color = Color(0xFF382900),
-                                        modifier = Modifier.size(24.dp),
-                                        strokeWidth = 2.dp
-                                    )
+                                    CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                                 } else {
                                     Text(
                                         "LOGIN",
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            letterSpacing = 2.sp
+                                            letterSpacing = 1.2.sp
                                         )
                                     )
                                 }
                             }
-                            
-                            // Elite Biometric Button
-                            if (isBiometricEnabled && authenticator.isBiometricAvailable()) {
-                                Surface(
-                                    onClick = {
-                                        authenticator.promptBiometricAuth(
-                                            title = "Elite Authentication",
-                                            subtitle = "Authenticate to access your account",
-                                            negativeButtonText = "Use Password",
-                                            onSuccess = {
-                                                // In a real elite app, we'd log in with a stored token
-                                                // For now, we simulate a success message or trigger a specific login
-                                            },
-                                            onError = { code, msg -> },
-                                            onFailed = { }
-                                        )
-                                    },
-                                    modifier = Modifier.size(56.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = Color.White.copy(alpha = 0.05f),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.3f))
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            Icons.Rounded.Fingerprint,
-                                            contentDescription = "Biometric Login",
-                                            tint = Color(0xFFD4AF37),
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                    }
-                                }
+                        }
+
+                        if (isBiometricEnabled && authenticator.isBiometricAvailable()) {
+                            IconButton(
+                                onClick = {
+                                    authenticator.promptBiometricAuth(
+                                        title = "SIKSHA Authentication",
+                                        subtitle = "Authenticate to access your account",
+                                        negativeButtonText = "Use Password",
+                                        onSuccess = { },
+                                        onError = { _, _ -> },
+                                        onFailed = { }
+                                    )
+                                },
+                                modifier = Modifier
+                                    .size(58.dp)
+                                    .border(1.5.dp, Color.DarkGray, RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF111619), RoundedCornerShape(16.dp))
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Fingerprint,
+                                    contentDescription = "Biometric Login",
+                                    tint = Color(0xFFFFD54F),
+                                    modifier = Modifier.size(32.dp)
+                                )
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(spacing().spacing8))
+                Spacer(modifier = Modifier.height(48.dp))
 
-                // Elite Role Selector
-                Card(
-                    modifier = Modifier.glassmorphic(backgroundColor = Color.White.copy(alpha = 0.02f)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                // Role Selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RoleSelectorItem("Student", loginType == LoginType.STUDENT) { loginType = LoginType.STUDENT }
-                        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 8.dp), color = Color.White.copy(alpha = 0.1f))
-                        RoleSelectorItem("Faculty", loginType == LoginType.TEACHER) { loginType = LoginType.TEACHER }
-                        VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 8.dp), color = Color.White.copy(alpha = 0.1f))
-                        RoleSelectorItem("Admin", loginType == LoginType.ADMIN) { loginType = LoginType.ADMIN }
-                    }
+                    RoleSelectorItem("Student", loginType == LoginType.STUDENT) { loginType = LoginType.STUDENT }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.width(1.dp).height(16.dp).background(Color.DarkGray))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    RoleSelectorItem("Faculty", loginType == LoginType.TEACHER) { loginType = LoginType.TEACHER }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.width(1.dp).height(16.dp).background(Color.DarkGray))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    RoleSelectorItem("Admin", loginType == LoginType.ADMIN) { loginType = LoginType.ADMIN }
                 }
             }
         }
@@ -319,15 +297,15 @@ fun LoginScreen(
 
 @Composable
 fun RoleSelectorItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal,
-                brush = if(isSelected) EliteGoldGradient else null
-            ),
-            color = if(isSelected) Color.Unspecified else Color.Gray
+    Text(
+        text = label,
+        modifier = Modifier
+            .clickable { onClick() }
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        color = if (isSelected) Color(0xFFFFD54F) else Color.DarkGray,
+        style = MaterialTheme.typography.labelLarge.copy(
+            fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 14.sp
         )
-    }
+    )
 }
-

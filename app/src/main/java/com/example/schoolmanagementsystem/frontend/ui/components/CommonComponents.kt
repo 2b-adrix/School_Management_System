@@ -260,7 +260,7 @@ fun PrimaryButton(
 
 @Composable
 fun LoadingScreen() {
-    EliteLoadingScreen()
+    EduLedgerLoadingScreen()
 }
 
 @Composable

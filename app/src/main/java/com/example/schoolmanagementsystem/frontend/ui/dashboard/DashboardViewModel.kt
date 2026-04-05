@@ -10,6 +10,9 @@ import com.example.schoolmanagementsystem.backend.domain.repository.ClassReposit
 import com.example.schoolmanagementsystem.backend.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.backend.domain.repository.TeacherRepository
 import com.example.schoolmanagementsystem.backend.domain.repository.FeeRepository
+import com.example.schoolmanagementsystem.backend.domain.repository.AttendanceRepository
+import com.example.schoolmanagementsystem.backend.domain.repository.TimetableRepository
+import com.example.schoolmanagementsystem.backend.domain.repository.SubjectRepository
 import com.example.schoolmanagementsystem.backend.domain.service.GenerativeAIService
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +28,9 @@ class DashboardViewModel @Inject constructor(
     private val classRepository: ClassRepository,
     private val announcementRepository: AnnouncementRepository,
     private val feeRepository: FeeRepository,
+    private val attendanceRepository: AttendanceRepository,
+    private val timetableRepository: TimetableRepository,
+    private val subjectRepository: SubjectRepository,
     private val aiService: GenerativeAIService
 ) : ViewModel() {
 
@@ -59,11 +65,81 @@ class DashboardViewModel @Inject constructor(
                     
                     if (user.role == UserRole.STUDENT) {
                         loadStudentData(user.id)
-                        loadAIInsight(user.id)
+                        loadStudentAttendance(user.id)
+                        loadCurrentSession(user.id)
                     }
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun loadCurrentSession(studentId: String) {
+        viewModelScope.launch {
+            val studentRes = studentRepository.getStudentById(studentId)
+            if (studentRes is Resource.Success) {
+                val classId = studentRes.data?.classId ?: return@launch
+                
+                combine(
+                    timetableRepository.getTimetableForClass(classId),
+                    subjectRepository.getAllSubjects()
+                ) { timetableRes, subjectsRes ->
+                    if (timetableRes is Resource.Success && subjectsRes is Resource.Success) {
+                        val calendar = java.util.Calendar.getInstance()
+                        val dayOfWeek = (calendar.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7 // Convert to 0=Mon
+                        
+                        val sdf24 = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                        val sdf12 = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+                        val currentTimeStr = sdf24.format(java.util.Date())
+                        val currentTime = try { sdf24.parse(currentTimeStr) } catch(e: Exception) { null }
+                        
+                        val todayEntries = timetableRes.data?.filter { it.dayOfWeek == dayOfWeek } ?: emptyList()
+                        val subjects = subjectsRes.data ?: emptyList()
+                        
+                        val current = todayEntries.find { entry ->
+                            try {
+                                val startTime = sdf12.parse(entry.startTime)
+                                val endTime = sdf12.parse(entry.endTime)
+                                if (startTime != null && endTime != null && currentTime != null) {
+                                    val start24 = sdf24.format(startTime)
+                                    val end24 = sdf24.format(endTime)
+                                    currentTimeStr >= start24 && currentTimeStr <= end24
+                                } else false
+                            } catch (e: Exception) { false }
+                        } ?: todayEntries.firstOrNull()
+
+                        current?.let { entry ->
+                            val subjectName = subjects.find { it.id == entry.subjectId }?.name ?: "Unknown Subject"
+                            _state.update { it.copy(
+                                currentSession = CurrentSession(
+                                    subject = subjectName,
+                                    time = "${entry.startTime} - ${entry.endTime}",
+                                    room = entry.roomNumber ?: "Room 101",
+                                    isLive = current != null // If we found one matching current time
+                                )
+                            ) }
+                        }
+                    }
+                }.launchIn(viewModelScope)
+            }
+        }
+    }
+
+    private fun loadStudentAttendance(studentId: String) {
+        attendanceRepository.getAttendanceForStudent(studentId)
+            .onEach { result ->
+                if (result is Resource.Success) {
+                    val records = result.data ?: emptyList()
+                    if (records.isNotEmpty()) {
+                        val presentCount = records.count { it.isPresent }
+                        val percentage = (presentCount.toFloat() / records.size.toFloat())
+                        _state.update { it.copy(attendancePercentage = percentage) }
+                        loadAIInsight(studentId, percentage)
+                    } else {
+                        _state.update { it.copy(attendancePercentage = 0f) }
+                        loadAIInsight(studentId, 0f)
+                    }
+                }
+            }.launchIn(viewModelScope)
     }
 
     private fun loadStudentData(studentId: String) {
@@ -89,15 +165,14 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun loadAIInsight(studentId: String) {
+    private fun loadAIInsight(studentId: String, attendance: Float) {
         viewModelScope.launch {
             _state.update { it.copy(isAILoading = true) }
-            // Simulate attendance percentage for AI demo
-            val result = aiService.getAttendanceInsight(85.0f)
+            val result = aiService.getAttendanceInsight(attendance * 100)
             if (result is Resource.Success) {
                 _state.update { it.copy(aiInsight = result.data ?: "", isAILoading = false) }
             } else {
-                _state.update { it.copy(aiInsight = "Focus on your studies to achieve elite results!", isAILoading = false) }
+                _state.update { it.copy(aiInsight = "Consistency is the key to academic excellence!", isAILoading = false) }
             }
         }
     }
@@ -132,16 +207,72 @@ class DashboardViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    fun refreshData() {
+        _state.update { it.copy(isRefreshing = true) }
+        viewModelScope.launch {
+            // Re-trigger data loading
+            loadStats()
+            loadAnnouncements()
+            _state.value.user?.let { user ->
+                if (user.role == UserRole.STUDENT) {
+                    loadStudentData(user.id)
+                    loadStudentAttendance(user.id)
+                }
+            }
+            
+            // Simulate an academic alert after refresh
+            kotlinx.coroutines.delay(800)
+            if (_state.value.attendancePercentage < 0.75f) {
+                _eventFlow.emit(UiEvent.ShowAcademicAlert(
+                    "Attendance Warning",
+                    "Your attendance has dropped below 75%. Please attend upcoming classes to avoid eligibility issues."
+                ))
+            } else {
+                _eventFlow.emit(UiEvent.ShowAcademicAlert(
+                    "Academic Excellence",
+                    "You're performing exceptionally well! Keep up the great work in your current modules."
+                ))
+            }
+
+            // Wait a bit for smooth UI
+            kotlinx.coroutines.delay(200)
+            _state.update { it.copy(isRefreshing = false) }
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
         }
     }
 
+    fun toggleAIDialog(isOpen: Boolean) {
+        _state.update { it.copy(isAIDialogOpen = isOpen) }
+        if (isOpen && _state.value.aiInsight.isEmpty()) {
+            _state.value.user?.let { loadAIInsight(it.id, _state.value.attendancePercentage) }
+        }
+    }
+
+    fun askAI(query: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isAILoading = true) }
+            // In a real app, we'd send the query to Gemini.
+            // For now, let's use the performance report generator as a general query handler.
+            val result = aiService.generatePerformanceReport("User asked: $query. Context: User is ${_state.value.userSubtitle} ${_state.value.userName}")
+            if (result is Resource.Success) {
+                _state.update { it.copy(aiInsight = result.data ?: "", isAILoading = false) }
+            } else {
+                _state.update { it.copy(aiInsight = "I'm having trouble connecting to the Siksha Brain. Please try again later.", isAILoading = false) }
+            }
+        }
+    }
+
     data class DashboardState(
         val isLoading: Boolean = true,
+        val isRefreshing: Boolean = false,
         val isAILoading: Boolean = false,
         val aiInsight: String = "",
+        val isAIDialogOpen: Boolean = false,
         val user: User? = null,
         val studentCount: Int = 0,
         val teacherCount: Int = 0,
@@ -150,7 +281,17 @@ class DashboardViewModel @Inject constructor(
         val userSubtitle: String = "",
         val notices: List<Notice> = emptyList(),
         val studentClassId: String = "",
-        val feeDuesAmount: Double = 0.0
+        val feeDuesAmount: Double = 0.0,
+        val attendancePercentage: Float = 0.0f,
+        val gpa: Double = 0.0,
+        val currentSession: CurrentSession? = null
+    )
+
+    data class CurrentSession(
+        val subject: String,
+        val time: String,
+        val room: String,
+        val isLive: Boolean = false
     )
 
     data class Notice(
@@ -162,6 +303,7 @@ class DashboardViewModel @Inject constructor(
 
     sealed class UiEvent {
         object LogoutSuccess : UiEvent()
+        data class ShowAcademicAlert(val title: String, val message: String) : UiEvent()
     }
 }
 

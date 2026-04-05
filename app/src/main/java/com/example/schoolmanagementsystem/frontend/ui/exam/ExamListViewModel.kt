@@ -30,7 +30,7 @@ class ExamListViewModel @Inject constructor(
 
     private val classId: String? = savedStateHandle["classId"]
 
-    private val _state = MutableStateFlow<Resource<List<Exam>>>(Resource.Loading())
+    private val _state = MutableStateFlow<ExamListState>(ExamListState())
     val state = _state.asStateFlow()
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
@@ -40,10 +40,34 @@ class ExamListViewModel @Inject constructor(
         getExams()
     }
 
+    fun refresh() {
+        _state.update { it.copy(isRefreshing = true) }
+        getExams()
+    }
+
     fun getExams() {
         classId?.let { id ->
             repository.getExamsByClass(id).onEach { result ->
-                _state.value = result
+                when (result) {
+                    is Resource.Success -> {
+                        _state.update { it.copy(
+                            exams = result.data ?: emptyList(),
+                            isLoading = false,
+                            isRefreshing = false,
+                            error = null
+                        ) }
+                    }
+                    is Resource.Error -> {
+                        _state.update { it.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            error = result.message ?: "An unexpected error occurred"
+                        ) }
+                    }
+                    is Resource.Loading -> {
+                        _state.update { it.copy(isLoading = true) }
+                    }
+                }
             }.launchIn(viewModelScope)
         }
     }
@@ -96,6 +120,13 @@ class ExamListViewModel @Inject constructor(
         }
         context.startActivity(Intent.createChooser(intent, "Open Report Card"))
     }
+
+    data class ExamListState(
+        val exams: List<Exam> = emptyList(),
+        val isLoading: Boolean = false,
+        val isRefreshing: Boolean = false,
+        val error: String? = null
+    )
 
     sealed class UiEvent {
         data class ShowSnackbar(val message: String) : UiEvent()

@@ -30,9 +30,6 @@ import com.example.schoolmanagementsystem.backend.domain.model.FeeStructure
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
 import com.example.schoolmanagementsystem.frontend.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.frontend.ui.components.LoadingScreen
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.PremiumBlueGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,40 +41,43 @@ fun FeeScreen(
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = Color(0xFF0F172A), // Premium Dark Blue
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Column(modifier = Modifier.background(PremiumBlueGradient)) {
+            Column(modifier = Modifier.background(Color.Transparent)) {
                 TopAppBar(
                     title = {
                         Text(
                             "Financial Overview",
-                            color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.onBackground,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                    )
                 )
                 
                 ScrollableTabRow(
                     selectedTabIndex = state.selectedTab,
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
-                    edgePadding = 16.dp,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    edgePadding = 20.dp,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             modifier = Modifier.tabIndicatorOffset(tabPositions[state.selectedTab]),
-                            color = Color(0xFFD4AF37) // Elite Gold indicator
+                            color = MaterialTheme.colorScheme.primary,
+                            height = 3.dp
                         )
                     },
                     divider = {}
                 ) {
-                    val tabs = listOf("Pending Dues", "Payment History", "Fee Structures")
+                    val tabs = listOf("Pending", "History", "Structures")
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = state.selectedTab == index,
@@ -85,9 +85,9 @@ fun FeeScreen(
                             text = {
                                 Text(
                                     title,
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.labelLarge,
                                     fontWeight = if (state.selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (state.selectedTab == index) Color.White else Color.White.copy(alpha = 0.6f)
+                                    color = if (state.selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         )
@@ -99,8 +99,8 @@ fun FeeScreen(
             if (state.selectedTab == 2) {
                 FloatingActionButton(
                     onClick = onAddFeeClick,
-                    containerColor = Color(0xFFD4AF37),
-                    contentColor = Color.Black,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Fee Structure")
@@ -120,19 +120,15 @@ fun FeeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
-                            .glassmorphic(
-                                backgroundColor = Color(0xFFD4AF37).copy(alpha = 0.05f),
-                                borderColor = Color(0xFFD4AF37).copy(alpha = 0.2f)
-                            )
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Total Outstanding Balance", color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
+                        Text("Total Outstanding Balance", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             state.totalDue,
                             style = MaterialTheme.typography.headlineLarge.copy(
-                                brush = EliteGoldGradient,
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 1.sp
                             )
@@ -141,12 +137,12 @@ fun FeeScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Icon(Icons.Rounded.Info, contentDescription = null, tint = Color(0xFFD4AF37), modifier = Modifier.size(14.dp))
+                            Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Next due date: Dec 15, 2024", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp)
+                            Text("Next due date: Dec 15, 2024", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     
@@ -156,7 +152,7 @@ fun FeeScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         item {
-                            Text("Detailed Breakdown", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("Detailed Breakdown", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         }
                         items(state.dueFees) { fee ->
                             FeeItemCard(fee, isPending = true)
@@ -239,14 +235,9 @@ fun FeeStructureItem(structure: FeeStructure, onDelete: () -> Unit) {
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .glassmorphic(
-                backgroundColor = Color.White.copy(alpha = 0.03f),
-                borderColor = Color.White.copy(alpha = 0.08f)
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -255,17 +246,17 @@ fun FeeStructureItem(structure: FeeStructure, onDelete: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(structure.feeName, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = Color.White)
-                Text("Class: ${structure.classId}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(structure.feeName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text("Class: ${structure.classId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("₹ ${structure.amount}", fontWeight = FontWeight.ExtraBold, color = Color(0xFFD4AF37), fontSize = 18.sp)
-                Text("Due Date: ${structure.dueDate}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text("₹ ${structure.amount}", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                Text("Due Date: ${structure.dueDate}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(
                 onClick = { showDeleteConfirm = true },
-                modifier = Modifier.background(Color.White.copy(alpha = 0.05f), CircleShape)
+                modifier = Modifier.background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), CircleShape)
             ) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF5252), modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -275,21 +266,11 @@ fun FeeStructureItem(structure: FeeStructure, onDelete: () -> Unit) {
 fun FeeItemCard(fee: FeeViewModel.FeeItem, isPending: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f))
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
-            modifier = Modifier
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.05f),
-                            Color.White.copy(alpha = 0.02f)
-                        )
-                    )
-                )
-                .padding(20.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -297,24 +278,24 @@ fun FeeItemCard(fee: FeeViewModel.FeeItem, isPending: Boolean) {
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(fee.title, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = Color.White)
+                    Text(fee.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         if (isPending) "Scheduled due: ${fee.dueDate}" else "Paid on: ${fee.dueDate}",
-                        color = Color.Gray,
-                        fontSize = 13.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
                 
                 Surface(
-                    color = if (isPending) Color(0xFFFF9800).copy(alpha = 0.15f) else Color(0xFF4CAF50).copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp)
+                    color = if (isPending) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                    shape = CircleShape
                 ) {
                     Text(
                         if (isPending) "PENDING" else "PAID",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = if (isPending) Color(0xFFFFB74D) else Color(0xFF81C784),
-                        fontSize = 10.sp,
+                        color = if (isPending) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
@@ -330,16 +311,15 @@ fun FeeItemCard(fee: FeeViewModel.FeeItem, isPending: Boolean) {
                 Text(
                     fee.amount,
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp,
-                    color = Color.White
+                    style = MaterialTheme.typography.titleLarge
                 )
                 
                 Button(
                     onClick = { /* View Invoice */ },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isPending) Color(0xFFD4AF37) else Color.White.copy(alpha = 0.1f),
-                        contentColor = if (isPending) Color.Black else Color.White
+                        containerColor = if (isPending) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (isPending) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
@@ -351,7 +331,7 @@ fun FeeItemCard(fee: FeeViewModel.FeeItem, isPending: Boolean) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         if (isPending) "PAY NOW" else "RECEIPT",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }

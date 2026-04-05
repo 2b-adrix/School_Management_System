@@ -21,8 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.frontend.ui.components.LoadingScreen
-import com.example.schoolmanagementsystem.frontend.ui.theme.PremiumBlueGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -47,12 +45,12 @@ fun MarkEntryScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFF0F172A), // Premium Deep Slate
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column(
                 modifier = Modifier
-                    .background(PremiumBlueGradient)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .statusBarsPadding()
                     .padding(bottom = 20.dp)
             ) {
@@ -66,20 +64,23 @@ fun MarkEntryScreen(
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
                     if (state.isSaving) {
-                        CircularProgressIndicator(color = Color(0xFFD4AF37), modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary, 
+                            modifier = Modifier.size(24.dp)
+                        )
                     } else {
                         Button(
                             onClick = { viewModel.saveMarks() },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFD4AF37),
-                                contentColor = Color.Black
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -94,13 +95,13 @@ fun MarkEntryScreen(
                 
                 Text(
                     text = "Performance Entry",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
                 Text(
                     text = "Recording academic marks for this assessment",
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 2.dp)
                 )
@@ -120,7 +121,7 @@ fun MarkEntryScreen(
                 item {
                     Text(
                         "STUDENT ROSTER",
-                        color = Color(0xFFD4AF37),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                         letterSpacing = 1.2.sp,
@@ -148,14 +149,9 @@ fun StudentMarkRow(
     onMarkChange: (String) -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .glassmorphic(
-                backgroundColor = Color.White.copy(alpha = 0.03f),
-                borderColor = Color.White.copy(alpha = 0.08f)
-            ),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -166,14 +162,14 @@ fun StudentMarkRow(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                 Surface(
-                    color = Color.White.copy(alpha = 0.1f),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     shape = CircleShape,
                     modifier = Modifier.size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             name.take(1),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -186,11 +182,11 @@ fun StudentMarkRow(
                         name, 
                         fontWeight = FontWeight.Bold, 
                         fontSize = 16.sp,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         "Roll No: $rollNo", 
-                        color = Color.White.copy(alpha = 0.5f), 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, 
                         fontSize = 12.sp
                     )
                 }
@@ -200,16 +196,16 @@ fun StudentMarkRow(
                 value = mark,
                 onValueChange = onMarkChange,
                 modifier = Modifier.width(90.dp),
-                placeholder = { Text("0.0", color = Color.White.copy(alpha = 0.3f)) },
+                placeholder = { Text("0.0", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFD4AF37),
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                    focusedContainerColor = Color.White.copy(alpha = 0.05f),
-                    unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 shape = RoundedCornerShape(12.dp)
             )

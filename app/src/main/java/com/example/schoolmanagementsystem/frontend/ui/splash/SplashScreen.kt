@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.frontend.ui.auth.AuthViewModel
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -65,34 +64,28 @@ fun SplashScreen(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1A1A1A),
-                        Color(0xFF121212)
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.alpha(alpha.value)
         ) {
-            // Branded Logo with Gold Ring
+            // Branded Logo with Lavender Ring
             Surface(
                 modifier = Modifier
                     .size(140.dp)
                     .scale(scale.value),
                 shape = androidx.compose.foundation.shape.CircleShape,
-                color = Color.Transparent,
-                border = androidx.compose.foundation.BorderStroke(2.dp, EliteGoldGradient)
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp,
+                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Rounded.School,
-                        contentDescription = "Elite Logo",
-                        tint = Color(0xFFD4AF37),
+                        contentDescription = "EduLedger Logo",
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(70.dp)
                     )
                 }
@@ -101,11 +94,11 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "SIKSHA",
+                text = "EDULEDGER",
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    brush = EliteGoldGradient,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 8.sp
+                    letterSpacing = 6.sp
                 ),
                 modifier = Modifier.scale(scale.value)
             )
@@ -113,10 +106,10 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "KNOWLEDGE IS POWER",
+                text = "SMART ACADEMIC MANAGEMENT",
                 style = MaterialTheme.typography.labelLarge.copy(
-                    color = Color.White.copy(alpha = 0.5f),
-                    letterSpacing = 4.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    letterSpacing = 2.sp,
                     fontWeight = FontWeight.Bold
                 ),
                 modifier = Modifier.scale(scale.value)
@@ -124,26 +117,26 @@ fun SplashScreen(
             
             Spacer(modifier = Modifier.height(64.dp))
             
-            // Premium Loading Indicator
+            // Modern Loading Indicator
             LinearProgressIndicator(
                 modifier = Modifier
                     .width(150.dp)
-                    .height(2.dp)
+                    .height(3.dp)
                     .alpha(alpha.value),
-                color = Color(0xFFD4AF37),
-                trackColor = Color.White.copy(alpha = 0.05f)
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             )
         }
         
         // Bottom Branding
         Text(
-            text = "POWERED BY SIKSHA CORE",
+            text = "POWERED BY EDULEDGER CORE",
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp)
                 .alpha(alpha.value * 0.5f),
             style = MaterialTheme.typography.labelSmall.copy(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 letterSpacing = 2.sp
             )
         )

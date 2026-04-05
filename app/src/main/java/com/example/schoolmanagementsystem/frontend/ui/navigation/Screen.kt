@@ -12,7 +12,6 @@ sealed class Screen(val route: String) {
     object StudentDetail : Screen("student_detail/{studentId}") {
         fun createRoute(studentId: String) = "student_detail/$studentId"
     }
-    object BulkImportStudent : Screen("bulk_import_student")
 
     // Teacher Management
     object TeacherList : Screen("teacher_list")
@@ -53,12 +52,6 @@ sealed class Screen(val route: String) {
     // Fees
     object FeeList : Screen("fee_list")
     object AddFeeStructure : Screen("add_fee_structure")
-    object FeePaymentList : Screen("fee_payment_list/{studentId}") {
-        fun createRoute(studentId: String) = "fee_payment_list/$studentId"
-    }
-    object AddFeePayment : Screen("add_fee_payment/{studentId}") {
-        fun createRoute(studentId: String) = "add_fee_payment/$studentId"
-    }
 
     // Timetable
     object TimetableList : Screen("timetable_list/{classId}") {

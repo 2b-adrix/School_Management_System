@@ -30,8 +30,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.frontend.ui.components.LoadingScreen
 import com.example.schoolmanagementsystem.frontend.ui.components.SchoolTopAppBar
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 import kotlinx.coroutines.flow.collectLatest
 import java.util.concurrent.Executors
 
@@ -62,14 +60,14 @@ fun AttendanceMarkScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SchoolTopAppBar(
-                title = "Elite Attendance",
+                title = "Attendance",
                 onBackClick = onNavigateBack,
                 actions = {
                     Box(
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(EliteGoldGradient)
+                            .background(MaterialTheme.colorScheme.primary)
                             .clickable { 
                                 showAiScanner = true 
                                 currentAiMode = AttendanceViewModel.AiMode.FACE
@@ -77,9 +75,18 @@ fun AttendanceMarkScreen(
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Rounded.AutoAwesome, 
+                                null, 
+                                tint = MaterialTheme.colorScheme.onPrimary, 
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("AI Scan", color = Color.White, style = MaterialTheme.typography.labelMedium)
+                            Text(
+                                "AI Scan", 
+                                color = MaterialTheme.colorScheme.onPrimary, 
+                                style = MaterialTheme.typography.labelMedium
+                            )
                         }
                     }
                 }
@@ -89,7 +96,8 @@ fun AttendanceMarkScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 tonalElevation = 8.dp,
-                shadowElevation = 16.dp
+                shadowElevation = 16.dp,
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Button(
                     onClick = { viewModel.saveAttendance() },
@@ -102,9 +110,15 @@ fun AttendanceMarkScreen(
                     enabled = !state.isLoading && !state.isSaving
                 ) {
                     if (state.isSaving) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp), 
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     } else {
-                        Text("Confirm Attendance", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        Text(
+                            "Confirm Attendance", 
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
                     }
                 }
             }
@@ -115,14 +129,13 @@ fun AttendanceMarkScreen(
                 LoadingScreen()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Summary Header Card (Premium UX: Glanceable)
+                    // Summary Header Card
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
-                            .glassmorphic(),
+                            .padding(16.dp),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Row(
                             modifier = Modifier.padding(20.dp).fillMaxWidth(),
@@ -133,10 +146,17 @@ fun AttendanceMarkScreen(
                             val total = state.students.size
                             
                             Column {
-                                Text("Class Summary", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    "Class Summary", 
+                                    style = MaterialTheme.typography.labelMedium, 
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                                 Text(
                                     "$presentCount / $total Present",
-                                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
                                 )
                             }
                             
@@ -144,13 +164,16 @@ fun AttendanceMarkScreen(
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(50.dp)) {
                                 CircularProgressIndicator(
                                     progress = { if(total > 0) presentCount.toFloat()/total else 0f },
-                                    color = Color(0xFF4CAF50),
-                                    trackColor = Color.White.copy(alpha = 0.1f),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                                     strokeWidth = 6.dp
                                 )
                                 Text(
                                     "${if(total > 0) (presentCount*100/total) else 0}%",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
                                 )
                             }
                         }
@@ -312,11 +335,9 @@ fun AiModeButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: S
 @Composable
 fun AttendanceRow(studentName: String, rollNumber: String, isPresent: Boolean, onToggle: (Boolean) -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .glassmorphic(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -325,11 +346,15 @@ fun AttendanceRow(studentName: String, rollNumber: String, isPresent: Boolean, o
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = if (isPresent) Color(0xFF4CAF50).copy(alpha = 0.1f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                color = if (isPresent) MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (isPresent) {
-                        Icon(Icons.Rounded.CheckCircle, null, tint = Color(0xFF4CAF50))
+                        Icon(
+                            Icons.Rounded.CheckCircle, 
+                            null, 
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
                     } else {
                         Text(
                             text = studentName.take(1).uppercase(),
@@ -345,7 +370,10 @@ fun AttendanceRow(studentName: String, rollNumber: String, isPresent: Boolean, o
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = studentName, 
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 )
                 Text(
                     text = "Roll ID: $rollNumber", 
@@ -359,8 +387,8 @@ fun AttendanceRow(studentName: String, rollNumber: String, isPresent: Boolean, o
                 checked = isPresent,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF4CAF50),
+                    checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
+                    checkedTrackColor = MaterialTheme.colorScheme.secondary,
                     uncheckedThumbColor = MaterialTheme.colorScheme.outline,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 )

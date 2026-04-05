@@ -39,6 +39,7 @@ class MyClassViewModel @Inject constructor(
             if (studentRes is Resource.Success) {
                 val student = studentRes.data ?: return@launch
                 val classId = student.classId
+                _state.update { it.copy(classId = classId) }
 
                 // 1. Load Attendance + AI Insight
                 attendanceRepository.getAttendanceForStudent(user.id).onEach { result ->
@@ -47,7 +48,15 @@ class MyClassViewModel @Inject constructor(
                         val total = records.size
                         val present = records.count { it.isPresent }
                         val percentage = if (total > 0) (present.toFloat() / total * 100) else 0f
-                        _state.update { it.copy(attendancePercentage = "${percentage.toInt()}%") }
+                        
+                        // Calculate weekly trend (last 7 records)
+                        val last7 = records.takeLast(7)
+                        val trend = last7.map { if (it.isPresent) 1f else 0f }
+                        
+                        _state.update { it.copy(
+                            attendancePercentage = "${percentage.toInt()}%",
+                            attendanceTrend = trend
+                        ) }
                         
                         // Get AI Insight for attendance
                         val insight = aiService.getAttendanceInsight(percentage)
@@ -84,7 +93,9 @@ class MyClassViewModel @Inject constructor(
     }
 
     data class MyClassState(
+        val classId: String = "",
         val attendancePercentage: String = "0%",
+        val attendanceTrend: List<Float> = emptyList(),
         val attendanceInsight: String = "Loading insight...",
         val timetableClasses: String = "0 classes",
         val timetableInsight: String = "Analyzing your day...",

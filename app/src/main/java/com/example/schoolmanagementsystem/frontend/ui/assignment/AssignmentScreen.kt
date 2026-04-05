@@ -3,6 +3,7 @@ package com.example.schoolmanagementsystem.frontend.ui.assignment
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -28,28 +29,48 @@ fun AssignmentScreen(
     viewModel: AssignmentViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val primaryColor = MaterialTheme.colorScheme.primary
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5),
+        containerColor = Color(0xFF090C0E),
         topBar = {
             TopAppBar(
-                title = { Text("Assignments", color = Color.White, fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        "Elite Assignments", 
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* Filter */ }) {
-                        Icon(Icons.Rounded.FilterList, contentDescription = "Filter", tint = Color.White)
+                        Icon(
+                            Icons.Rounded.FilterList, 
+                            contentDescription = "Filter",
+                            tint = Color.White
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = primaryColor)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF090C0E),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(modifier = Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp)) {
+
             when (val assignmentsResource = state.assignments) {
                 is Resource.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -62,16 +83,23 @@ fun AssignmentScreen(
                     )
                 }
                 is Resource.Success -> {
-                    val assignments: List<Assignment> = assignmentsResource.data ?: emptyList()
+                    val assignments = assignmentsResource.data ?: emptyList()
                     if (assignments.isEmpty()) {
-                        Text(
-                            text = "No assignments found",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "No active assignments",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
+                            contentPadding = PaddingValues(vertical = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(assignments) { assignment: Assignment ->
@@ -80,6 +108,7 @@ fun AssignmentScreen(
                         }
                     }
                 }
+
             }
         }
     }
@@ -89,55 +118,101 @@ fun AssignmentScreen(
 fun AssignmentItemCard(assignment: Assignment) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1A2127))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(assignment.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Subject: ${assignment.subject}", color = Color.Gray, fontSize = 14.sp)
-                    if (assignment.dueDate != null) {
-                        Text("Due: ${assignment.dueDate}", color = Color.Gray, fontSize = 14.sp)
+                    Text(
+                        assignment.title, 
+                        fontWeight = FontWeight.Bold, 
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = Color(0xFFB4C0FF).copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = assignment.subject,
+                                color = Color(0xFFB4C0FF),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        if (assignment.dueDate != null) {
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                "Due: ${assignment.dueDate}", 
+                                color = Color.Gray, 
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
                 
-                Text(
-                    text = assignment.submissionType, 
-                    color = Color(0xFFD32F2F).copy(alpha = 0.7f), 
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Surface(
+                    color = Color(0xFFE91E63).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = assignment.submissionType.uppercase(), 
+                        color = Color(0xFFE91E63), 
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
             }
             
-            if (assignment.status != null) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (assignment.status != null) {
                     Surface(
-                        color = Color.White,
-                        shape = RoundedCornerShape(16.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFA000))
+                        color = if (assignment.status == "Submitted") Color(0xFF4CAF50).copy(alpha = 0.1f) else Color(0xFFFFD54F).copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(
                             text = assignment.status ?: "",
-                            color = Color(0xFFFFA000),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                            color = if (assignment.status == "Submitted") Color(0xFF4CAF50) else Color(0xFFFFD54F),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                     }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                Button(
+                    onClick = { /* Submit logic */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB4C0FF)),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        if (assignment.status == "Submitted") "View Submission" else "Submit Now",
+                        color = Color(0xFF090C0E),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
     }
 }
+
 

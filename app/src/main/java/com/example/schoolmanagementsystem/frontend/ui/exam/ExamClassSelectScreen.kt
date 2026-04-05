@@ -24,8 +24,6 @@ import com.example.schoolmanagementsystem.backend.domain.util.Resource
 import com.example.schoolmanagementsystem.frontend.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.frontend.ui.components.LoadingScreen
 import com.example.schoolmanagementsystem.frontend.ui.schoolclass.ClassListViewModel
-import com.example.schoolmanagementsystem.frontend.ui.theme.PremiumBlueGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 
 @Composable
 fun ExamClassSelectScreen(
@@ -36,11 +34,11 @@ fun ExamClassSelectScreen(
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = Color(0xFF0F172A), // Premium Deep Slate
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(
                 modifier = Modifier
-                    .background(PremiumBlueGradient)
+                    .background(MaterialTheme.colorScheme.primary)
                     .statusBarsPadding()
                     .padding(bottom = 24.dp)
             ) {
@@ -54,20 +52,20 @@ fun ExamClassSelectScreen(
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
                 
                 Text(
                     text = "Academic Assessment",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
                 Text(
                     text = "Select a class to manage examinations",
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
                 )
@@ -86,7 +84,7 @@ fun ExamClassSelectScreen(
                         item {
                             Text(
                                 "Available Classes",
-                                color = Color(0xFFD4AF37), // Elite Gold
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -114,13 +112,11 @@ fun ClassExamItem(schoolClass: SchoolClass, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .glassmorphic(
-                backgroundColor = Color.White.copy(alpha = 0.03f),
-                borderColor = Color.White.copy(alpha = 0.08f)
-            ),
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Row(
             modifier = Modifier
@@ -134,27 +130,27 @@ fun ClassExamItem(schoolClass: SchoolClass, onClick: () -> Unit) {
                     text = schoolClass.name,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Section ${schoolClass.section}",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 )
             }
             
             Surface(
-                color = Color(0xFFD4AF37).copy(alpha = 0.1f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.size(48.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = schoolClass.name.take(1),
-                        color = Color(0xFFD4AF37),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )

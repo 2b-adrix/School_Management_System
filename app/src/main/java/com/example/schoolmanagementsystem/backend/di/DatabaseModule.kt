@@ -50,5 +50,8 @@ object DatabaseModule {
 
     @Provides
     fun provideResultDao(db: AppDatabase): ResultDao = db.resultDao()
+
+    @Provides
+    fun provideTimetableDao(db: AppDatabase): TimetableDao = db.timetableDao()
 }
 

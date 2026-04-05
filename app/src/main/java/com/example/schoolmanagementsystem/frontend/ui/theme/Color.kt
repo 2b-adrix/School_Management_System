@@ -2,63 +2,66 @@ package com.example.schoolmanagementsystem.frontend.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Elite Gold & Charcoal Theme Colors
+// Siksha Global Palette - Ultra Dark with Vibrant Accents
 
-// Light Theme (Premium bright, silver/gold accents)
-val LightPrimary = Color(0xFFB08D28) // Gold
+// Brand Colors
+val SikshaYellow = Color(0xFFFFD54F)   // Bright Yellow Accent
+val SikshaGreen = Color(0xFF4CAF50)    // Emerald Green Accent
+val SikshaBlue = Color(0xFF4FC3F7)     // Sky Blue Accent
+val SikshaDarkBlue = Color(0xFF1E88E5) // Deeper Blue
+val SikshaPurple = Color(0xFF9C27B0)   // Purple for Assignments
+val SikshaPink = Color(0xFFE91E63)     // Pink for Exams
+val SikshaSlate = Color(0xFF607D8B)    // Slate for Library
+
+// Base Colors
+val SikshaBlack = Color(0xFF090C0E)    // Ultra-dark charcoal background
+val SikshaSurface = Color(0xFF111619)  // Deep slate surface/cards
+val SikshaSurfaceLight = Color(0xFF1A2127) // Lighter slate for inner elements
+
+// Light Theme (Clean Professional)
+val LightPrimary = Color(0xFF1E88E5) 
 val LightOnPrimary = Color(0xFFFFFFFF)
-val LightPrimaryContainer = Color(0xFFF9E8B6)
-val LightOnPrimaryContainer = Color(0xFF2E2200)
+val LightPrimaryContainer = Color(0xFFE3F2FD)
+val LightOnPrimaryContainer = Color(0xFF0D47A1)
 
-val LightSecondary = Color(0xFF4A4B50) // Slate gray
+val LightSecondary = Color(0xFF4CAF50)
 val LightOnSecondary = Color(0xFFFFFFFF)
-val LightSecondaryContainer = Color(0xFFE3E2E6)
-val LightOnSecondaryContainer = Color(0xFF0D0D0E)
+val LightSecondaryContainer = Color(0xFFE8F5E9)
+val LightOnSecondaryContainer = Color(0xFF1B5E20)
 
-val LightTertiary = Color(0xFF282A36) // Dark charcoal
-val LightOnTertiary = Color(0xFFFFFFFF)
-val LightTertiaryContainer = Color(0xFFD6D7EB)
-val LightOnTertiaryContainer = Color(0xFF0F101A)
-
-val LightError = Color(0xFF9E1F1F)
-val LightOnError = Color(0xFFFFFFFF)
-val LightErrorContainer = Color(0xFFFFDAD6)
-val LightOnErrorContainer = Color(0xFF410002)
-
-val LightBackground = Color(0xFFF5F5F7) // Platinum white
-val LightOnBackground = Color(0xFF161618)
+val LightBackground = Color(0xFFF9FAFB)
+val LightOnBackground = Color(0xFF111827)
 val LightSurface = Color(0xFFFFFFFF)
-val LightOnSurface = Color(0xFF161618)
-val LightSurfaceVariant = Color(0xFFE2E2E4)
-val LightOnSurfaceVariant = Color(0xFF434345)
-val LightOutline = Color(0xFF747476)
+val LightOnSurface = Color(0xFF111827)
+val LightSurfaceVariant = Color(0xFFF3F4F6)
+val LightOnSurfaceVariant = Color(0xFF4B5563)
+val LightOutline = Color(0xFFE5E7EB)
 
-// Dark Theme (Charcoal & Premium Gold)
-val DarkPrimary = Color(0xFFD4AF37) // Elite Gold
-val DarkOnPrimary = Color(0xFF382900)
-val DarkPrimaryContainer = Color(0xFF554000)
-val DarkOnPrimaryContainer = Color(0xFFFCE18D)
+// Dark Theme (The "Siksha" Look)
+val DarkBackground = SikshaBlack
+val DarkOnBackground = Color(0xFFF8FAFB)
+val DarkSurface = SikshaSurface
+val DarkOnSurface = Color(0xFFF8FAFB)
+val DarkSurfaceVariant = SikshaSurfaceLight
+val DarkOnSurfaceVariant = Color(0xFF94A3B8)
+val DarkOutline = Color(0xFF2D353C)
 
-val DarkSecondary = Color(0xFFA6ABB4) // Silver
-val DarkOnSecondary = Color(0xFF121419)
-val DarkSecondaryContainer = Color(0xFF2A2E35)
-val DarkOnSecondaryContainer = Color(0xFFD0D5E0)
+val DarkPrimary = SikshaBlue
+val DarkOnPrimary = Color(0xFF003354)
+val DarkPrimaryContainer = Color(0xFF004A77)
+val DarkOnPrimaryContainer = Color(0xFFC1E8FF)
 
-val DarkTertiary = Color(0xFFE0E0E0) // Platinum
-val DarkOnTertiary = Color(0xFF1E1E1E)
-val DarkTertiaryContainer = Color(0xFF333333)
-val DarkOnTertiaryContainer = Color(0xFFF5F5F5)
+val DarkSecondary = SikshaGreen
+val DarkOnSecondary = Color(0xFF00391C)
+val DarkSecondaryContainer = Color(0xFF00522C)
+val DarkOnSecondaryContainer = Color(0xFF8FF7AF)
 
-val DarkError = Color(0xFFFFB4AB)
-val DarkOnError = Color(0xFF690005)
+val DarkTertiary = SikshaYellow
+val DarkOnTertiary = Color(0xFF412D00)
+val DarkTertiaryContainer = Color(0xFF5D4200)
+val DarkOnTertiaryContainer = Color(0xFFFFDF9E)
+
+val DarkError = Color(0xFFFB7185)
+val DarkOnError = Color(0xFF4C0519)
 val DarkErrorContainer = Color(0xFF93000A)
 val DarkOnErrorContainer = Color(0xFFFFDAD6)
-
-val DarkBackground = Color(0xFF121212) // Deep Charcoal
-val DarkOnBackground = Color(0xFFE2E2E2)
-val DarkSurface = Color(0xFF1E1E1E) // Lighter Charcoal surface
-val DarkOnSurface = Color(0xFFE2E2E2)
-val DarkSurfaceVariant = Color(0xFF424242)
-val DarkOnSurfaceVariant = Color(0xFFC0C0C0)
-val DarkOutline = Color(0xFF888888)
-

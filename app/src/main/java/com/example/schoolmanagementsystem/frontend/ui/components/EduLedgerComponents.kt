@@ -1,6 +1,9 @@
 package com.example.schoolmanagementsystem.frontend.ui.components
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -12,20 +15,57 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 
 @Composable
-fun EliteAIInsightCard(
+fun EduLedgerLoader(
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        )
+    }
+}
+
+@Composable
+fun EduLedgerLoadingScreen(
+    message: String = "Processing..."
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.9f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            EduLedgerLoader(modifier = Modifier.size(60.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun EduLedgerAIInsightCard(
     insight: String,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .glassmorphic(),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -36,12 +76,12 @@ fun EliteAIInsightCard(
                 Icon(
                     Icons.Rounded.AutoAwesome,
                     contentDescription = null,
-                    tint = Color(0xFFD4AF37) // Elite Gold
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "AI ELITE INSIGHT",
+                    text = "AI INSIGHT",
                     style = MaterialTheme.typography.labelLarge.copy(
-                        brush = EliteGoldGradient,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
@@ -53,18 +93,17 @@ fun EliteAIInsightCard(
             if (isLoading) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth().height(2.dp),
-                    color = Color(0xFFD4AF37),
-                    trackColor = Color.White.copy(alpha = 0.1f)
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 )
             } else {
                 Text(
                     text = insight,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 24.sp
                 )
             }
         }
     }
 }
-

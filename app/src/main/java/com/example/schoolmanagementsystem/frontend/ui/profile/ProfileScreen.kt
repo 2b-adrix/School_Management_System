@@ -1,7 +1,6 @@
 package com.example.schoolmanagementsystem.frontend.ui.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,16 +14,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.PremiumBlueGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
-import com.example.schoolmanagementsystem.frontend.ui.theme.spacing
 
 @Composable
 fun ProfileScreen(
@@ -34,13 +28,13 @@ fun ProfileScreen(
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = Color(0xFF0F172A), // Premium Deep Slate
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(
                 modifier = Modifier
-                    .background(PremiumBlueGradient)
+                    .background(MaterialTheme.colorScheme.background)
                     .statusBarsPadding()
-                    .padding(bottom = 20.dp)
+                    .padding(bottom = 8.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -52,202 +46,232 @@ fun ProfileScreen(
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
-                    IconButton(onClick = { /* Edit Profile */ }) {
-                        Icon(Icons.Rounded.Settings, contentDescription = "Settings", tint = Color.White)
+                    if (state.isEditing) {
+                        TextButton(onClick = { viewModel.saveProfile() }) {
+                            Text("SAVE", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        IconButton(onClick = { viewModel.toggleEdit() }) {
+                            Icon(
+                                Icons.Rounded.Edit, 
+                                contentDescription = "Edit Profile", 
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     }
                 }
                 
                 Text(
-                    text = "Elite Profile",
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    text = if (state.isEditing) "Edit Profile" else "Elite Profile",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
                 Text(
-                    text = "Manage your academic identity and preferences",
-                    color = Color.White.copy(alpha = 0.7f),
+                    text = "Manage your institutional identity",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
                 )
             }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Profile Image Section with Elite Ring
-            Box(
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else {
+            Column(
                 modifier = Modifier
-                    .size(140.dp)
-                    .clip(CircleShape)
-                    .background(EliteGoldGradient)
-                    .padding(4.dp)
-                    .background(Color(0xFF0F172A), CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.05f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(80.dp),
-                        tint = Color.White.copy(alpha = 0.8f)
-                    )
+                // Profile Image Section
+                ProfileImageSection()
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (state.isEditing) {
+                    EditFields(state, viewModel)
+                } else {
+                    DisplayProfile(state)
                 }
                 
-                // Active status badge
-                Surface(
-                    color = Color(0xFF4CAF50),
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.BottomEnd)
-                        .border(3.dp, Color(0xFF0F172A), CircleShape)
-                ) {}
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = state.name,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
-                )
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Surface(
-                color = Color(0xFFD4AF37).copy(alpha = 0.15f),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFD4AF37).copy(alpha = 0.3f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Rounded.Badge, contentDescription = null, tint = Color(0xFFD4AF37), modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "ID: ${state.id}",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFD4AF37)
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Info Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glassmorphic(
-                        backgroundColor = Color.White.copy(alpha = 0.03f),
-                        borderColor = Color.White.copy(alpha = 0.08f)
-                    ),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Text(
-                        "PERSONAL CREDENTIALS",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.2.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFFD4AF37)
-                        )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
-                    
-                    ProfileInfoRow(Icons.Rounded.Email, "Official Email", state.email)
-                    ProfileInfoRow(Icons.Rounded.Phone, "Primary Phone", state.phone)
-                    ProfileInfoRow(Icons.Rounded.School, "Academic Role", state.subtitle)
-                    ProfileInfoRow(Icons.Rounded.CalendarMonth, "Commencement Date", state.joinedDate)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Performance/Status Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glassmorphic(
-                        backgroundColor = Color.White.copy(alpha = 0.03f),
-                        borderColor = Color.White.copy(alpha = 0.08f)
-                    ),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-            ) {
-                Row(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            "SUBSCRIPTION TIER",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color.White.copy(alpha = 0.5f),
-                                letterSpacing = 1.sp
-                            )
-                        )
-                        Text(
-                            "Elite Institution",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        )
-                    }
-                    
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(EliteGoldGradient, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Rounded.Verified,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            TextButton(onClick = { /* Logout */ }) {
-                Icon(Icons.Rounded.Logout, contentDescription = null, tint = Color.Red.copy(alpha = 0.7f))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Sign Out", color = Color.Red.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
     }
 }
+
+@Composable
+fun ProfileImageSection() {
+    Box(
+        modifier = Modifier
+            .size(140.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            .padding(4.dp)
+            .background(MaterialTheme.colorScheme.background, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Rounded.Person,
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayProfile(state: ProfileViewModel.ProfileState) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = state.name,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Surface(
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Rounded.Badge, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("ID: ${state.id}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        InfoCard("ACADEMIC DETAILS") {
+            ProfileInfoRow(Icons.Rounded.School, "Class", state.className)
+            ProfileInfoRow(Icons.Rounded.Numbers, "Admission No", state.admissionNumber)
+            ProfileInfoRow(Icons.Rounded.CalendarMonth, "Joined Date", state.joinedDate)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        InfoCard("PERSONAL CREDENTIALS") {
+            ProfileInfoRow(Icons.Rounded.Email, "Official Email", state.email)
+            ProfileInfoRow(Icons.Rounded.Phone, "Primary Phone", state.phone)
+            ProfileInfoRow(Icons.Rounded.LocationOn, "Address", state.addressHome)
+            ProfileInfoRow(Icons.Rounded.Cake, "Date of Birth", state.dob)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        InfoCard("GUARDIAN INFO") {
+            ProfileInfoRow(Icons.Rounded.SupervisorAccount, "Guardian Name", state.guardianName)
+            ProfileInfoRow(Icons.Rounded.ContactPhone, "Guardian Contact", state.guardianMobile)
+        }
+    }
+}
+
+@Composable
+fun EditFields(state: ProfileViewModel.ProfileState, viewModel: ProfileViewModel) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        OutlinedTextField(
+            value = state.firstName,
+            onValueChange = { viewModel.onNameChange(it, state.lastName) },
+            label = { Text("First Name") },
+            modifier = Modifier.fillMaxWidth(),
+            colors = editTextFieldColors(),
+            shape = RoundedCornerShape(16.dp)
+        )
+        OutlinedTextField(
+            value = state.lastName,
+            onValueChange = { viewModel.onNameChange(state.firstName, it) },
+            label = { Text("Last Name") },
+            modifier = Modifier.fillMaxWidth(),
+            colors = editTextFieldColors(),
+            shape = RoundedCornerShape(16.dp)
+        )
+        OutlinedTextField(
+            value = state.phone,
+            onValueChange = { viewModel.onPhoneChange(it) },
+            label = { Text("Phone") },
+            modifier = Modifier.fillMaxWidth(),
+            colors = editTextFieldColors(),
+            shape = RoundedCornerShape(16.dp)
+        )
+        OutlinedTextField(
+            value = state.guardianName,
+            onValueChange = { viewModel.onGuardianNameChange(it) },
+            label = { Text("Guardian Name") },
+            modifier = Modifier.fillMaxWidth(),
+            colors = editTextFieldColors(),
+            shape = RoundedCornerShape(16.dp)
+        )
+        OutlinedTextField(
+            value = state.addressHome,
+            onValueChange = { viewModel.onAddressChange(it) },
+            label = { Text("Address") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            colors = editTextFieldColors(),
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+@Composable
+fun InfoCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            content()
+        }
+    }
+}
+
+@Composable
+fun editTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    cursorColor = MaterialTheme.colorScheme.primary
+)
 
 @Composable
 fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
@@ -260,13 +284,13 @@ fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
         Surface(
             modifier = Modifier.size(40.dp),
             shape = RoundedCornerShape(12.dp),
-            color = Color.White.copy(alpha = 0.05f)
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     icon, 
                     contentDescription = null, 
-                    tint = Color.White.copy(alpha = 0.6f),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -276,16 +300,15 @@ fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
             Text(
                 label, 
                 style = MaterialTheme.typography.labelSmall, 
-                color = Color.White.copy(alpha = 0.4f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 value, 
                 style = MaterialTheme.typography.bodyLarge, 
                 fontWeight = FontWeight.Medium,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
-

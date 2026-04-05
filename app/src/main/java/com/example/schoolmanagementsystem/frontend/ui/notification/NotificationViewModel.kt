@@ -31,7 +31,7 @@ class NotificationViewModel @Inject constructor(
                 }
                 is Resource.Success -> {
                     val items = result.data?.map { 
-                        AnnouncementItem(it.title, it.content, it.createdAt)
+                        AnnouncementItem(it.id, it.title, it.content, it.createdAt)
                     } ?: emptyList()
                     _state.value = _state.value.copy(announcements = items, isLoading = false)
                 }
@@ -49,9 +49,11 @@ class NotificationViewModel @Inject constructor(
     )
 
     data class AnnouncementItem(
+        val id: String,
         val title: String,
         val content: String,
-        val time: String
+        val time: String,
+        val isRead: Boolean = false
     )
 }
 

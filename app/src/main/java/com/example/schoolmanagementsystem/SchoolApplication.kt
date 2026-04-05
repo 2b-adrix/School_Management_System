@@ -21,10 +21,10 @@ class SchoolApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        scheduleEliteSyncTasks()
+        scheduleEduLedgerSyncTasks()
     }
 
-    private fun scheduleEliteSyncTasks() {
+    private fun scheduleEduLedgerSyncTasks() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
@@ -38,7 +38,7 @@ class SchoolApplication : Application(), Configuration.Provider {
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "EliteAttendanceSync",
+            "EduLedgerAttendanceSync",
             ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )

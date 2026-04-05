@@ -15,6 +15,8 @@ import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,11 +30,9 @@ import com.example.schoolmanagementsystem.backend.domain.model.Exam
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
 import com.example.schoolmanagementsystem.frontend.ui.components.ErrorScreen
 import com.example.schoolmanagementsystem.frontend.ui.components.LoadingScreen
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.PremiumBlueGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExamListScreen(
     classId: String,
@@ -56,14 +56,14 @@ fun ExamListScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFF0F172A), // Premium Deep Slate
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column(
                 modifier = Modifier
-                    .background(PremiumBlueGradient)
+                    .background(MaterialTheme.colorScheme.background)
                     .statusBarsPadding()
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 8.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -75,79 +75,90 @@ fun ExamListScreen(
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
-                    TextButton(
-                        onClick = { onAddExamClick(classId) },
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFD4AF37))
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = CircleShape,
+                        onClick = { onAddExamClick(classId) }
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Add Exam", fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("ADD EXAM", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
                     }
                 }
                 
                 Text(
                     text = "Examinations",
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
                 Text(
                     text = "Track results and manage schedules",
-                    color = Color.White.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
                 )
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (val result = state) {
-                is Resource.Loading -> LoadingScreen()
-                is Resource.Success -> {
-                    val exams = result.data ?: emptyList()
-                    if (exams.isEmpty()) {
-                        EmptyExamsPlaceholder()
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            item {
-                                Text(
-                                    "UPCOMING & COMPLETED",
-                                    color = Color(0xFFD4AF37),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    letterSpacing = 1.2.sp,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
-                            items(exams) { exam ->
-                                ExamItem(
-                                    exam = exam, 
-                                    onActionClick = { 
-                                        onMarkEntryClick(exam.id)
-                                    },
-                                    onDownloadClick = {
-                                        viewModel.downloadReportCard(context, exam.id)
-                                    },
-                                    onDelete = { viewModel.deleteExam(exam) }
-                                )
-                            }
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (state.isLoading && state.exams.isEmpty()) {
+                LoadingScreen()
+            } else if (state.error != null && state.exams.isEmpty()) {
+                ErrorScreen(
+                    message = state.error ?: "Error",
+                    onRetry = { viewModel.getExams() }
+                )
+            } else {
+                if (state.exams.isEmpty()) {
+                    EmptyExamsPlaceholder()
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            Text(
+                                "UPCOMING & COMPLETED",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.2.sp,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        items(state.exams) { exam ->
+                            ExamItem(
+                                exam = exam, 
+                                onActionClick = { 
+                                    onMarkEntryClick(exam.id)
+                                },
+                                onDownloadClick = {
+                                    viewModel.downloadReportCard(context, exam.id)
+                                },
+                                onDelete = { viewModel.deleteExam(exam) }
+                            )
                         }
                     }
                 }
-                is Resource.Error -> ErrorScreen(
-                    message = result.message ?: "Error",
-                    onRetry = { viewModel.getExams() }
-                )
             }
         }
     }
@@ -186,116 +197,133 @@ fun ExamItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onActionClick)
-            .glassmorphic(
-                backgroundColor = Color.White.copy(alpha = 0.03f),
-                borderColor = Color.White.copy(alpha = 0.08f)
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            .clickable(onClick = onActionClick),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = exam.title, 
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+        Box {
+            // Background Gradient Accent
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                Color.Transparent
+                            )
                         )
                     )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Rounded.CalendarToday,
-                            contentDescription = null,
-                            tint = Color(0xFFD4AF37),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = exam.date, 
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-                
-                Surface(
-                    color = Color(0xFFD4AF37).copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(10.dp)
+            )
+
+            Column(modifier = Modifier.padding(24.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "${exam.totalMarks} PTS",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        color = Color(0xFFD4AF37),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            Divider(color = Color.White.copy(alpha = 0.05f))
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row {
-                    Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.05f),
-                        onClick = onDownloadClick
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = exam.title,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
+                                letterSpacing = (-0.5).sp
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                Icons.Rounded.Download,
-                                contentDescription = "Download Report",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                Icons.Rounded.CalendarToday,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = exam.date,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.Gray
                             )
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
+
                     Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.05f),
-                        onClick = onActionClick
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.Edit,
-                                contentDescription = "Enter Marks",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Text(
+                            text = "${exam.totalMarks} PTS",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 12.sp
+                        )
                     }
                 }
-                
-                IconButton(onClick = { showDeleteConfirm = true }) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = Color.Red.copy(alpha = 0.5f)
-                    )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        ActionButton(
+                            icon = Icons.Rounded.Download,
+                            onClick = onDownloadClick,
+                            containerColor = Color(0xFF1A2127)
+                        )
+                        ActionButton(
+                            icon = Icons.Rounded.Edit,
+                            onClick = onActionClick,
+                            containerColor = Color(0xFF1A2127)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { showDeleteConfirm = true },
+                        modifier = Modifier
+                            .background(Color.Red.copy(alpha = 0.1f), CircleShape)
+                            .size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.Red.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    containerColor: Color
+) {
+    Surface(
+        modifier = Modifier.size(44.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = containerColor,
+        onClick = onClick
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

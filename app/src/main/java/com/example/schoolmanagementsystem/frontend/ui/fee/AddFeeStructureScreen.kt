@@ -28,8 +28,6 @@ import com.example.schoolmanagementsystem.frontend.ui.components.PrimaryButton
 import com.example.schoolmanagementsystem.frontend.ui.components.SchoolTopAppBar
 import com.example.schoolmanagementsystem.frontend.ui.components.SectionTitle
 import com.example.schoolmanagementsystem.frontend.ui.schoolclass.ClassListViewModel
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 import com.example.schoolmanagementsystem.frontend.ui.theme.spacing
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
@@ -113,24 +111,23 @@ fun AddFeeStructureScreen(
             verticalArrangement = Arrangement.spacedBy(spacing().spacing4)
         ) {
             
-            // Elite Header Card
+            // EduLedger Header Card
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .glassmorphic(),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    .fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Column(modifier = Modifier.padding(spacing().spacing4)) {
                     Text(
                         text = "Fee Configuration",
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            brush = EliteGoldGradient,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                     )
                     Text(
-                        text = "Define elite billing structures for premium accounts",
+                        text = "Define billing structures for the school",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

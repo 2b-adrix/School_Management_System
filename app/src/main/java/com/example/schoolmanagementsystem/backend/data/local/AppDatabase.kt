@@ -14,9 +14,10 @@ import com.example.schoolmanagementsystem.backend.data.local.entity.*
         SubjectEntity::class,
         AttendanceEntity::class,
         ExamEntity::class,
-        ResultEntity::class
+        ResultEntity::class,
+        TimetableEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,6 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun attendanceDao(): AttendanceDao
     abstract fun examDao(): ExamDao
     abstract fun resultDao(): ResultDao
+    abstract fun timetableDao(): TimetableDao
 
     companion object {
         const val DATABASE_NAME = "school_db"

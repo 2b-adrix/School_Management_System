@@ -1,21 +1,20 @@
 package com.example.schoolmanagementsystem.frontend.ui.message
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AddComment
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,9 +25,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.frontend.ui.dashboard.DashboardBottomNavigation
 import com.example.schoolmanagementsystem.frontend.ui.navigation.Screen
-import com.example.schoolmanagementsystem.frontend.ui.theme.EliteGoldGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.PremiumBlueGradient
-import com.example.schoolmanagementsystem.frontend.ui.theme.glassmorphic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,19 +35,21 @@ fun MessagesScreen(
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = Color(0xFF0F172A), // Premium Dark Blue background
+        containerColor = Color(0xFF090C0E),
         topBar = {
             Column(
                 modifier = Modifier
-                    .background(PremiumBlueGradient)
-                    .padding(top = 16.dp, bottom = 8.dp)
+                    .background(Color.Transparent)
+                    .padding(top = 24.dp, bottom = 8.dp)
             ) {
                 Text(
-                    "Communications",
-                    color = Color.White,
+                    "Elite Messages",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = Color.White,
+                        fontSize = 32.sp
+                    ),
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 )
                 
                 // Search Bar
@@ -60,19 +58,19 @@ fun MessagesScreen(
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 24.dp, vertical = 12.dp)
                         .height(56.dp),
-                    placeholder = { Text("Search conversations...", color = Color.Gray) },
+                    placeholder = { Text("Search by name or content...", color = Color.Gray) },
                     leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = Color.Gray) },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFD4AF37),
+                        focusedBorderColor = Color(0xFF4FC3F7),
                         unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                        focusedContainerColor = Color.White.copy(alpha = 0.05f),
-                        unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
+                        focusedContainerColor = Color(0xFF111619),
+                        unfocusedContainerColor = Color(0xFF111619),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
                     ),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(20.dp),
                     singleLine = true
                 )
             }
@@ -80,8 +78,8 @@ fun MessagesScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { /* New Message */ },
-                containerColor = Color(0xFFD4AF37), // Elite Gold
-                contentColor = Color.Black,
+                containerColor = Color(0xFFB4C0FF),
+                contentColor = Color(0xFF090C0E),
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
@@ -96,122 +94,154 @@ fun MessagesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             items(state.messages) { message ->
-                MessageItemRow(message)
+                ExpandableMessageItem(message, onNavigate)
             }
         }
     }
 }
 
 @Composable
-fun MessageItemRow(message: MessagesViewModel.MessageItem) {
+fun ExpandableMessageItem(message: MessagesViewModel.MessageItem, onNavigate: (String) -> Unit) {
+    var isExpanded by remember { mutableStateOf(false) }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .glassmorphic(
-                backgroundColor = Color.White.copy(alpha = 0.03f),
-                borderColor = Color.White.copy(alpha = 0.08f)
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            .clickable { isExpanded = !isExpanded },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isExpanded) Color(0xFF1A2127) else Color(0xFF111619)
+        ),
+        border = if (isExpanded) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF4FC3F7).copy(alpha = 0.3f)) else null
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+                .animateContentSize()
+                .padding(20.dp)
         ) {
-            // Avatar with Status Indicator
-            Box {
-                Box(
-                    modifier = Modifier
-                        .size(54.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.Person,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.6f),
-                        modifier = Modifier.size(32.dp)
-                    )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Avatar with Status Indicator
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1A2127)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.Person,
+                            contentDescription = null,
+                            tint = Color(0xFFFFD54F),
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    
+                    if (message.isOnline) {
+                        Canvas(
+                            modifier = Modifier
+                                .size(14.dp)
+                                .align(Alignment.BottomEnd)
+                                .border(2.dp, Color(0xFF111619), CircleShape)
+                        ) {
+                            drawCircle(color = Color(0xFF4CAF50))
+                        }
+                    }
                 }
                 
-                if (message.isOnline) {
-                    Canvas(
-                        modifier = Modifier
-                            .size(14.dp)
-                            .align(Alignment.BottomEnd)
-                            .border(2.dp, Color(0xFF0F172A), CircleShape)
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        drawCircle(color = Color(0xFF4CAF50)) // Online Green
+                        Text(
+                            message.sender,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium.copy(color = Color.White),
+                        )
+                        Text(
+                            message.time,
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(2.dp))
+                    
+                    Surface(
+                        color = if (message.role == "admin") Color(0xFF2D1B1B) else Color(0xFF1B2D24),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            message.role.uppercase(),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            color = if (message.role == "admin") Color(0xFFE91E63) else Color(0xFF4CAF50),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.sp
+                            )
+                        )
                     }
                 }
             }
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        message.sender,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        message.time,
-                        color = Color.Gray,
-                        fontSize = 12.sp
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    message.role.uppercase(),
-                    color = Color(0xFFD4AF37), // Elite Gold
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 1.sp
+                    message.content,
+                    color = if (isExpanded) Color.White else Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 1,
+                    lineHeight = 22.sp
                 )
                 
-                Spacer(modifier = Modifier.height(6.dp))
-                
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        message.content,
-                        color = if (message.unreadCount > 0) Color.White else Color.Gray,
-                        fontSize = 14.sp,
-                        fontWeight = if (message.unreadCount > 0) FontWeight.Medium else FontWeight.Normal,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    if (message.unreadCount > 0) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .background(EliteGoldGradient, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                message.unreadCount.toString(),
-                                color = Color.Black,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                if (!isExpanded && message.unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(20.dp)
+                            .background(Color(0xFF4FC3F7), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            message.unreadCount.toString(),
+                            color = Color(0xFF090C0E),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+            
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = { onNavigate(Screen.ChatDetail.createRoute(message.id, message.sender)) }) {
+                        Text("Reply", color = Color(0xFF4FC3F7), fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { onNavigate(Screen.ChatDetail.createRoute(message.id, message.sender)) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A2127)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("View Thread", color = Color.White)
                     }
                 }
             }

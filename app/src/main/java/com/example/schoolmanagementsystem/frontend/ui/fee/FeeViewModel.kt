@@ -44,23 +44,60 @@ class FeeViewModel @Inject constructor(
         viewModelScope.launch {
             val user = authRepository.getCurrentUser().firstOrNull() ?: return@launch
             
-            // 1. Get Fee Structures
-            feeRepository.getFeeStructures().onEach { result ->
-                _state.value = _state.value.copy(feeStructures = result)
-            }.launchIn(viewModelScope)
-
-            // 2. Get Payments for current student (if applicable)
-            feeRepository.getPaymentsByStudent(user.id).onEach { result ->
-                if (result is Resource.Success) {
-                    val payments = result.data ?: emptyList()
-                    val paidItems = payments.map { 
-                        FeeItem(it.id, "Payment Received", it.paymentDate, "₹ ${it.amountPaid}", true) 
+            // 1. Get Fee Structures and calculate pending
+            combine(
+                feeRepository.getFeeStructures(),
+                feeRepository.getPaymentsByStudent(user.id),
+                studentRepository.getStudentById(user.id).asFlow()
+            ) { structuresRes, paymentsRes, studentRes ->
+                if (structuresRes is Resource.Success && paymentsRes is Resource.Success && studentRes is Resource.Success) {
+                    val student = studentRes.data
+                    val allStructures = structuresRes.data ?: emptyList()
+                    val payments = paymentsRes.data ?: emptyList()
+                    
+                    // Filter structures for the student's class
+                    val studentStructures = allStructures.filter { it.classId == student?.classId }
+                    
+                    // Calculate pending fees
+                    val pendingItems = mutableListOf<FeeItem>()
+                    var totalDueAmount = 0.0
+                    
+                    studentStructures.forEach { structure ->
+                        val amountPaidForThis = payments.filter { it.feeStructureId == structure.id }.sumOf { it.amountPaid }
+                        val remaining = structure.amount - amountPaidForThis
+                        
+                        if (remaining > 0) {
+                            pendingItems.add(
+                                FeeItem(
+                                    id = structure.id,
+                                    title = structure.feeName,
+                                    dueDate = structure.dueDate ?: "No Date",
+                                    amount = "₹ $remaining",
+                                    isPaid = false
+                                )
+                            )
+                            totalDueAmount += remaining
+                        }
                     }
-                    _state.value = _state.value.copy(paidFees = paidItems)
+                    
+                    val paidItems = payments.map { 
+                        FeeItem(it.id, "Payment: ${allStructures.find { s -> s.id == it.feeStructureId }?.feeName ?: "Fee"}", it.paymentDate, "₹ ${it.amountPaid}", true) 
+                    }
+                    
+                    _state.update { it.copy(
+                        dueFees = pendingItems,
+                        paidFees = paidItems,
+                        totalDue = "₹ $totalDueAmount",
+                        feeStructures = structuresRes
+                    ) }
+                } else {
+                    _state.update { it.copy(feeStructures = structuresRes) }
                 }
             }.launchIn(viewModelScope)
         }
     }
+
+    private fun <T> Resource<T>.asFlow(): Flow<Resource<T>> = flow { emit(this@asFlow) }
 
     fun getFeeStructures() {
         feeRepository.getFeeStructures().onEach { result ->
@@ -129,7 +166,7 @@ class FeeViewModel @Inject constructor(
     )
 
     fun onTabSelected(index: Int) {
-        _state.value = _state.value.copy(selectedTab = index)
+        _state.update { it.copy(selectedTab = index) }
     }
 
     fun downloadReceipt(context: Context, feeItemId: String) {
@@ -183,6 +220,33 @@ class FeeViewModel @Inject constructor(
                 getFeeStructures()
             } else if (result is Resource.Error) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(result.message ?: "Error deleting fee structure"))
+            }
+        }
+    }
+
+    fun payFee(feeStructureId: String, amount: Double) {
+        viewModelScope.launch {
+            val user = authRepository.getCurrentUser().firstOrNull() ?: return@launch
+            _saveState.value = Resource.Loading()
+            
+            val payment = FeePayment(
+                id = UUID.randomUUID().toString(),
+                schoolId = user.schoolId,
+                studentId = user.id,
+                feeStructureId = feeStructureId,
+                amountPaid = amount,
+                paymentDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                paymentMethod = "Online",
+                status = "PAID"
+            )
+            
+            val result = feeRepository.addPayment(payment)
+            _saveState.value = result
+            
+            if (result is Resource.Success) {
+                _eventFlow.emit(UiEvent.ShowSnackbar("Payment successful!"))
+            } else {
+                _eventFlow.emit(UiEvent.ShowSnackbar("Payment failed: ${result.message}"))
             }
         }
     }
