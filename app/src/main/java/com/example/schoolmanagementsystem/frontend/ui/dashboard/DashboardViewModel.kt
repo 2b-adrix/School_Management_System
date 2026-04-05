@@ -44,6 +44,7 @@ class DashboardViewModel @Inject constructor(
         observeUser()
         loadStats()
         loadAnnouncements()
+        loadHolidays()
     }
 
     private fun observeUser() {
@@ -207,6 +208,18 @@ class DashboardViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    private fun loadHolidays() {
+        // In a real app, this might come from a repository.
+        // For now, let's provide some dynamic-feeling data.
+        val holidays = listOf(
+            Holiday("1", "26", "Jan", "Republic Day"),
+            Holiday("2", "15", "Aug", "Independence Day"),
+            Holiday("3", "02", "Oct", "Gandhi Jayanti"),
+            Holiday("4", "25", "Dec", "Christmas")
+        )
+        _state.update { it.copy(holidays = holidays) }
+    }
+
     fun refreshData() {
         _state.update { it.copy(isRefreshing = true) }
         viewModelScope.launch {
@@ -284,7 +297,15 @@ class DashboardViewModel @Inject constructor(
         val feeDuesAmount: Double = 0.0,
         val attendancePercentage: Float = 0.0f,
         val gpa: Double = 0.0,
-        val currentSession: CurrentSession? = null
+        val currentSession: CurrentSession? = null,
+        val holidays: List<Holiday> = emptyList()
+    )
+
+    data class Holiday(
+        val id: String,
+        val day: String,
+        val month: String,
+        val title: String
     )
 
     data class CurrentSession(

@@ -577,6 +577,12 @@ fun StudentDashboard(
             )
         }
 
+         // Upcoming Holidays Section
+        if (state.holidays.isNotEmpty()) {
+            item {
+                UpcomingHolidaysSection(state.holidays)
+            }
+        }
 
         // System Ledger Activity
         item {
@@ -1148,6 +1154,13 @@ fun TeacherDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
                 }
             }
         }
+
+        // Upcoming Holidays Section
+        if (state.holidays.isNotEmpty()) {
+            item {
+                UpcomingHolidaysSection(state.holidays)
+            }
+        }
         
         item { Spacer(modifier = Modifier.height(110.dp)) }
     }
@@ -1218,6 +1231,13 @@ fun AdminDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String
                 }
             }
         }
+
+        // Upcoming Holidays Section
+        if (state.holidays.isNotEmpty()) {
+            item {
+                UpcomingHolidaysSection(state.holidays)
+            }
+        }
         
         item { Spacer(modifier = Modifier.height(110.dp)) }
     }
@@ -1246,6 +1266,91 @@ fun AdminStatCard(title: String, value: String, icon: ImageVector, color: Color,
                 Text(title, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 Text(value, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
             }
+        }
+    }
+}
+
+@Composable
+fun UpcomingHolidaysSection(holidays: List<DashboardViewModel.Holiday>) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "UPCOMING HOLIDAYS",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    letterSpacing = 1.sp
+                )
+            )
+            Text(
+                "View All",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = Color(0xFFFFD54F),
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = Modifier.clickable { /* Navigation for holidays could be added here */ }
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            holidays.take(2).forEach { holiday ->
+                HolidayItemCard(holiday, Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+fun HolidayItemCard(holiday: DashboardViewModel.Holiday, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .background(Color(0xFF1A2127), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 10.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    holiday.day,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFFFFD54F)
+                    )
+                )
+                Text(
+                    holiday.month.uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                holiday.title,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                ),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
         }
     }
 }
