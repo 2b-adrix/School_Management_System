@@ -23,5 +23,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SchoOL Management System"
+rootProject.name = "SIKSHA"
 include(":app")

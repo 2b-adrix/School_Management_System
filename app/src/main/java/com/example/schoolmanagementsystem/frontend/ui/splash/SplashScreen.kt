@@ -94,7 +94,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "EDULEDGER",
+                text = "SIKSHA",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.ExtraBold,
@@ -130,7 +130,7 @@ fun SplashScreen(
         
         // Bottom Branding
         Text(
-            text = "POWERED BY EDULEDGER CORE",
+            text = "POWERED BY SIKSHA CORE",
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp)
