@@ -1,0 +1,12 @@
+package com.example.schoolmanagementsystem.backend.repository
+
+import com.example.schoolmanagementsystem.backend.model.AttendanceRecord
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import java.time.LocalDate
+
+@Repository
+interface AttendanceRepository : JpaRepository<AttendanceRecord, String> {
+    fun findByStudentIdAndDate(studentId: String, date: LocalDate): AttendanceRecord?
+    fun findBySchoolClassIdAndDate(classId: String, date: LocalDate): List<AttendanceRecord>
+}
