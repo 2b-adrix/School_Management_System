@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SIKSHA"
 include(":app")
+include(":backend")

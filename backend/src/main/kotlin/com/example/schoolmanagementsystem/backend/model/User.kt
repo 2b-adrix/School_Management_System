@@ -29,7 +29,7 @@ data class User(
     val schoolId: String
 ) : UserDetails {
     override fun getAuthorities(): Collection<GrantedAuthority> {
-        return listOf(SimpleGrantedAuthority("ROLE_\${role.name}"))
+        return listOf(SimpleGrantedAuthority("ROLE_${role.name}"))
     }
 
     override fun getPassword(): String = passwordHash

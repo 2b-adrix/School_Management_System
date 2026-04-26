@@ -13,12 +13,12 @@ class GeminiService(
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models"
 
     fun getAttendanceInsight(percentage: Float): String {
-        val prompt = "A student has an attendance of \$percentage%. Give a 1-sentence supportive advice or insight about this."
+        val prompt = "A student has an attendance of ${percentage}%. Give a 1-sentence supportive advice or insight about this."
         return generateText(prompt)
     }
 
     private fun generateText(prompt: String): String {
-        val url = "\$baseUrl/\$model:generateContent?key=\$apiKey"
+        val url = "$baseUrl/$model:generateContent?key=$apiKey"
         val requestBody = mapOf(
             "contents" to listOf(
                 mapOf("parts" to listOf(mapOf("text" to prompt)))
