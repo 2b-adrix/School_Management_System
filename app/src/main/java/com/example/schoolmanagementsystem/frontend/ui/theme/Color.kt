@@ -12,6 +12,20 @@ val SikshaDarkBlue = Color(0xFF1E88E5) // Deeper Blue
 val SikshaPurple = Color(0xFF9C27B0)   // Purple for Assignments
 val SikshaPink = Color(0xFFE91E63)     // Pink for Exams
 val SikshaSlate = Color(0xFF607D8B)    // Slate for Library
+val SikshaGold = Color(0xFFFFD700)     // Premium Gold accent
+
+// Glassmorphic / Elite Palette
+val EliteGlassWhite = Color(0x1AFFFFFF) // 10% White for glass effect
+val EliteGlassBlack = Color(0x33000000) // 20% Black for glass effect
+val EliteGlassBorder = Color(0x33FFFFFF) // 20% White for borders
+
+// Premium Gradients
+val PremiumGradientBlue = listOf(Color(0xFF4FC3F7), Color(0xFF1E88E5))
+val PremiumGradientGreen = listOf(Color(0xFF4CAF50), Color(0xFF2E7D32))
+val PremiumGradientGold = listOf(Color(0xFFFFD54F), Color(0xFFF9A825))
+val PremiumGradientPurple = listOf(Color(0xFF9C27B0), Color(0xFF6A1B9A))
+val PremiumGradientPink = listOf(Color(0xFFE91E63), Color(0xFFAD1457))
+val PremiumGradientDark = listOf(Color(0xFF111619), Color(0xFF090C0E))
 
 // Base Colors
 val SikshaBlack = Color(0xFF090C0E)    // Ultra-dark charcoal background

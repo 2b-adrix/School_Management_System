@@ -120,12 +120,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
 
-    // Supabase (Bom version 3.0.1 or higher uses Ktor 3)
-    implementation(platform(libs.supabase.bom))
-    implementation(libs.supabase.postgrest)
-    implementation(libs.supabase.auth)
-    implementation(libs.supabase.storage)
-
     // Image Loading & PDF
     implementation(libs.coil.compose)
     implementation(libs.openpdf)

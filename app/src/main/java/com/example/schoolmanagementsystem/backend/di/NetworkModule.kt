@@ -11,11 +11,17 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    private const val BASE_URL = "http://10.0.2.2:8080/" // Use 10.0.2.2 for Android Emulator to access localhost
 
     @Provides
     @Singleton
@@ -40,6 +46,21 @@ object NetworkModule {
                 url("https://generativelanguage.googleapis.com/v1beta/models/")
             }
         }
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSikshaApiService(retrofit: Retrofit): SikshaApiService {
+        return retrofit.create(SikshaApiService::class.java)
     }
 }
 

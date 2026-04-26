@@ -1,6 +1,7 @@
 package com.example.schoolmanagementsystem.frontend.ui.timetable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,11 +14,8 @@ import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.pulltorefresh.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.schoolmanagementsystem.backend.domain.model.TimetableEntry
+import com.example.schoolmanagementsystem.frontend.ui.components.*
+import com.example.schoolmanagementsystem.frontend.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,11 +35,11 @@ fun TimetableScreen(
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = DarkBackground,
         topBar = {
             Column(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(DarkBackground)
                     .statusBarsPadding()
             ) {
                 Row(
@@ -48,18 +48,22 @@ fun TimetableScreen(
                         .padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier
+                            .background(EliteGlassWhite, CircleShape)
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = Color.White
                         )
                     }
                 }
                 
                 Text(
                     text = "Weekly Schedule",
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = Color.White,
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
@@ -69,13 +73,13 @@ fun TimetableScreen(
                 ScrollableTabRow(
                     selectedTabIndex = state.selectedDay,
                     containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.primary,
+                    contentColor = DarkPrimary,
                     edgePadding = 24.dp,
                     indicator = { tabPositions ->
                         if (state.selectedDay < tabPositions.size) {
                             TabRowDefaults.SecondaryIndicator(
                                 modifier = Modifier.tabIndicatorOffset(tabPositions[state.selectedDay]),
-                                color = MaterialTheme.colorScheme.primary
+                                color = DarkPrimary
                             )
                         }
                     },
@@ -91,7 +95,7 @@ fun TimetableScreen(
                                     title, 
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = if (state.selectedDay == index) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (state.selectedDay == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (state.selectedDay == index) DarkPrimary else DarkOnSurfaceVariant
                                 ) 
                             }
                         )
@@ -107,13 +111,22 @@ fun TimetableScreen(
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            indicator = {
+                val pullState = rememberPullToRefreshState()
+                PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = state.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = DarkSurface,
+                    color = DarkPrimary
+                )
+            }
         ) {
             if (state.isLoading && state.schedule.isEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = DarkPrimary)
+                }
             } else {
                 val currentDaySchedule = state.schedule[state.selectedDay] ?: emptyList()
 
@@ -125,8 +138,11 @@ fun TimetableScreen(
                         contentPadding = PaddingValues(24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(currentDaySchedule) { displayEntry ->
-                            TimetableEntryCard(displayEntry)
+                        items(currentDaySchedule.size) { index ->
+                            val displayEntry = currentDaySchedule[index]
+                            EliteEntranceAnimation(index = index) {
+                                EliteTimetableEntryCard(displayEntry)
+                            }
                         }
                     }
                 }
@@ -136,39 +152,33 @@ fun TimetableScreen(
 }
 
 @Composable
-fun TimetableEntryCard(displayEntry: TimetableViewModel.TimetableDisplayEntry) {
+fun EliteTimetableEntryCard(displayEntry: TimetableViewModel.TimetableDisplayEntry) {
     val entry = displayEntry.entry
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
+    EliteGlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Time Column
             Column(
-                modifier = Modifier.width(80.dp),
+                modifier = Modifier.width(70.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = entry.startTime,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.White
                 )
                 Box(
                     modifier = Modifier
                         .height(20.dp)
                         .width(2.dp)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                        .background(DarkPrimary.copy(alpha = 0.3f))
                 )
                 Text(
                     text = entry.endTime,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = DarkOnSurfaceVariant
                 )
             }
 
@@ -179,23 +189,23 @@ fun TimetableEntryCard(displayEntry: TimetableViewModel.TimetableDisplayEntry) {
                 Text(
                     text = displayEntry.subjectName, 
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.White
                 )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Rounded.Person, 
                         contentDescription = null, 
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = DarkPrimary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = displayEntry.teacherName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = DarkOnSurfaceVariant
                     )
                     
                     if (entry.roomNumber != null) {
@@ -203,24 +213,25 @@ fun TimetableEntryCard(displayEntry: TimetableViewModel.TimetableDisplayEntry) {
                         Icon(
                             Icons.Rounded.LocationOn, 
                             contentDescription = null, 
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = DarkPrimary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Room ${entry.roomNumber}", 
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = DarkOnSurfaceVariant
                         )
                     }
                 }
             }
 
-            // Indicator
+            // Status Indicator
             Surface(
-                modifier = Modifier.size(8.dp),
+                modifier = Modifier.size(10.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary
+                color = DarkPrimary,
+                border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.2f))
             ) {}
         }
     }

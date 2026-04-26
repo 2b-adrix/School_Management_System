@@ -37,6 +37,8 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import androidx.compose.animation.core.*
 import com.example.schoolmanagementsystem.frontend.ui.navigation.Screen
+import com.example.schoolmanagementsystem.frontend.ui.components.*
+import com.example.schoolmanagementsystem.frontend.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -55,8 +57,7 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-    val pullToRefreshState = rememberPullToRefreshState()
+    val haptic = LocalHapticFeedback.current
     
     var showPaymentSheet by remember { mutableStateOf(false) }
     var showAcademicAlert by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -80,7 +81,7 @@ fun DashboardScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = Color(0xFF111619),
+                drawerContainerColor = DarkSurface,
                 drawerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
                 modifier = Modifier.width(320.dp),
                 windowInsets = WindowInsets(0)
@@ -117,9 +118,9 @@ fun DashboardScreen(
                     DrawerItem(
                         Icons.AutoMirrored.Rounded.Logout, 
                         "Sign Out", 
-                        textColor = Color(0xFFE91E63)
+                        textColor = DarkError
                     ) { 
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         viewModel.logout() 
                     }
                     Spacer(modifier = Modifier.height(24.dp))
@@ -128,20 +129,25 @@ fun DashboardScreen(
         }
     ) {
         Scaffold(
-            containerColor = Color(0xFF090C0E),
+            containerColor = DarkBackground,
             topBar = {
                 TopAppBar(
                     navigationIcon = {
-                        IconButton(onClick = { 
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                            scope.launch { drawerState.open() } 
-                        }) {
+                        IconButton(
+                            onClick = { 
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                scope.launch { drawerState.open() } 
+                            },
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .background(EliteGlassWhite, CircleShape)
+                        ) {
                             Icon(Icons.Rounded.Menu, contentDescription = "Menu", tint = Color.White)
                         }
                     },
                     title = {
                         Text(
-                            "Siksha",
+                            "Siksha Elite",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.White,
@@ -150,7 +156,11 @@ fun DashboardScreen(
                         )
                     },
                     actions = {
-                        IconButton(onClick = { onNavigate(Screen.NotificationList.route) }) {
+                        IconButton(
+                            onClick = { onNavigate(Screen.NotificationList.route) },
+                            modifier = Modifier
+                                .background(EliteGlassWhite, CircleShape)
+                        ) {
                             Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
@@ -163,7 +173,6 @@ fun DashboardScreen(
             }
         ) { padding ->
             PullToRefreshBox(
-                state = pullToRefreshState,
                 isRefreshing = state.isRefreshing,
                 onRefresh = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -173,20 +182,19 @@ fun DashboardScreen(
                     .padding(padding)
                     .fillMaxSize(),
                 indicator = {
+                    val pullState = rememberPullToRefreshState()
                     PullToRefreshDefaults.Indicator(
-                        state = pullToRefreshState,
+                        state = pullState,
                         isRefreshing = state.isRefreshing,
                         modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = Color(0xFF111619),
-                        color = Color(0xFFFFD54F)
+                        containerColor = DarkSurface,
+                        color = DarkPrimary
                     )
                 }
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     if (state.isLoading && !state.isRefreshing) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = Color(0xFFFFD54F))
-                        }
+                        StudentDashboardSkeleton()
                     } else {
                         when (state.user?.role) {
                             UserRole.STUDENT -> StudentDashboard(state, onNavigate) { showPaymentSheet = true }
@@ -293,6 +301,31 @@ fun DashboardScreen(
                     shape = RoundedCornerShape(28.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun StudentDashboardSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        // Header Skeleton
+        Box(modifier = Modifier.width(200.dp).height(32.dp).clip(RoundedCornerShape(8.dp)).eliteShimmer().background(Color.White.copy(0.05f)))
+        Box(modifier = Modifier.width(150.dp).height(16.dp).clip(RoundedCornerShape(4.dp)).eliteShimmer().background(Color.White.copy(0.05f)))
+        
+        // Cards Skeletons
+        EliteSkeletonCard()
+        EliteSkeletonCard()
+        
+        // Grid Skeleton
+        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            Box(modifier = Modifier.weight(1f).aspectRatio(1.1f).clip(RoundedCornerShape(24.dp)).eliteShimmer().background(Color.White.copy(0.05f)))
+            Box(modifier = Modifier.weight(1f).aspectRatio(1.1f).clip(RoundedCornerShape(24.dp)).eliteShimmer().background(Color.White.copy(0.05f)))
         }
     }
 }
@@ -517,76 +550,92 @@ fun StudentDashboard(
     ) {
         // Hello Section
         item {
-            Column(modifier = Modifier.padding(top = 8.dp)) {
-                Text(
-                    "Hello, ${state.userName.split(" ").firstOrNull() ?: "User"}",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 32.sp
+            EliteEntranceAnimation(index = 0) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        "Hello, ${state.userName.split(" ").firstOrNull() ?: "User"}",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 32.sp
+                        )
                     )
-                )
-                Text(
-                    "ACADEMIC STATUS: OPTIMAL",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = Color.Gray,
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.Bold
+                    Text(
+                        "ACADEMIC STATUS: OPTIMAL",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = DarkPrimary,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
-                )
+                }
             }
         }
 
         // Attendance Card
         item {
-            SikshaAttendanceCard(progress = state.attendancePercentage.coerceIn(0f, 1f))
+            EliteEntranceAnimation(index = 1) {
+                EliteAttendanceCard(progress = state.attendancePercentage.coerceIn(0f, 1f))
+            }
         }
 
         // Current Session Card
         item {
-            CurrentSessionCard(
-                session = state.currentSession,
-                onNavigate = onNavigate
-            )
+            EliteEntranceAnimation(index = 2) {
+                EliteCurrentSessionCard(
+                    session = state.currentSession,
+                    onNavigate = onNavigate
+                )
+            }
         }
 
         // Action Grid
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("Timetable", Icons.Rounded.CalendarMonth, Color(0xFF4FC3F7), Modifier.weight(1f)) { onNavigate(Screen.Events.route) }
-                    GridActionCard("Assignments", Icons.Rounded.AssignmentTurnedIn, Color(0xFF4CAF50), Modifier.weight(1f)) { onNavigate(Screen.Assignments.route) }
-                }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("Exams", Icons.Rounded.Quiz, Color(0xFFE91E63), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
-                    GridActionCard("Library", Icons.Rounded.AutoStories, Color(0xFF9C27B0), Modifier.weight(1f)) { onNavigate(Screen.Library.route) }
+            EliteEntranceAnimation(index = 3) {
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("Timetable", Icons.Rounded.CalendarMonth, PremiumGradientBlue, Modifier.weight(1f)) { onNavigate(Screen.Events.route) }
+                        EliteGridActionCard("Assignments", Icons.Rounded.AssignmentTurnedIn, PremiumGradientGreen, Modifier.weight(1f)) { onNavigate(Screen.Assignments.route) }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("Exams", Icons.Rounded.Quiz, PremiumGradientPink, Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
+                        EliteGridActionCard("Library", Icons.Rounded.AutoStories, PremiumGradientPurple, Modifier.weight(1f)) { onNavigate(Screen.Library.route) }
+                    }
                 }
             }
         }
 
         // AI Insight Section
         item {
-            EliteInsightCard(state.aiInsight, state.isAILoading)
+            EliteEntranceAnimation(index = 4) {
+                DashboardEliteInsightCard(state.aiInsight, state.isAILoading)
+            }
         }
 
         // Pending Fees Card
         item {
-            PendingFeesCard(
-                amount = "₹ ${String.format("%.2f", state.feeDuesAmount)}",
-                onClick = onSettleAccount
-            )
+            EliteEntranceAnimation(index = 5) {
+                ElitePendingFeesCard(
+                    amount = "₹ ${String.format("%.2f", state.feeDuesAmount)}",
+                    onClick = onSettleAccount
+                )
+            }
         }
 
          // Upcoming Holidays Section
         if (state.holidays.isNotEmpty()) {
             item {
-                UpcomingHolidaysSection(state.holidays)
+                EliteEntranceAnimation(index = 6) {
+                    UpcomingHolidaysSection(state.holidays)
+                }
             }
         }
 
         // System Ledger Activity
         item {
-            SystemLedgerSection()
+            EliteEntranceAnimation(index = 7) {
+                SystemLedgerSection()
+            }
         }
         
         item { Spacer(modifier = Modifier.height(110.dp)) }
@@ -594,14 +643,10 @@ fun StudentDashboard(
 }
 
 @Composable
-fun SikshaAttendanceCard(progress: Float) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
-        shape = RoundedCornerShape(24.dp)
-    ) {
+fun EliteAttendanceCard(progress: Float) {
+    EliteGlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -609,7 +654,7 @@ fun SikshaAttendanceCard(progress: Float) {
                 Text(
                     "ATTENDANCE",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
+                    color = DarkOnSurfaceVariant,
                     letterSpacing = 1.sp
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -622,7 +667,7 @@ fun SikshaAttendanceCard(progress: Float) {
                         )
                     )
                     Surface(
-                        color = Color(0xFF1B2D24),
+                        color = DarkSecondaryContainer.copy(alpha = 0.3f),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.padding(start = 12.dp, bottom = 6.dp)
                     ) {
@@ -630,19 +675,10 @@ fun SikshaAttendanceCard(progress: Float) {
                             "TARGET MET",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF4CAF50),
+                            color = DarkSecondary,
                             fontWeight = FontWeight.Bold
                         )
                     }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                    Box(modifier = Modifier.size(6.dp).background(Color(0xFF4CAF50), CircleShape))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Updated just now",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
                 }
             }
 
@@ -650,22 +686,22 @@ fun SikshaAttendanceCard(progress: Float) {
                 CircularProgressIndicator(
                     progress = { 1f },
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.White.copy(alpha = 0.1f),
+                    color = Color.White.copy(alpha = 0.05f),
                     strokeWidth = 8.dp,
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
                 CircularProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF4CAF50),
+                    color = DarkSecondary,
                     strokeWidth = 8.dp,
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
-                Text(
-                    "${(progress * 100).toInt()}%",
-                    color = Color(0xFF4CAF50),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                Icon(
+                    Icons.Rounded.Verified,
+                    contentDescription = null,
+                    tint = DarkSecondary,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -673,41 +709,38 @@ fun SikshaAttendanceCard(progress: Float) {
 }
 
 @Composable
-fun CurrentSessionCard(
+fun EliteCurrentSessionCard(
     session: DashboardViewModel.CurrentSession?,
     onNavigate: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+    EliteGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Current Session",
+                    "CURRENT SESSION",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
+                    color = DarkOnSurfaceVariant,
+                    letterSpacing = 1.sp
                 )
                 if (session?.isLive == true) {
                     Surface(
-                        color = Color(0xFF2D1B1B),
+                        color = DarkErrorContainer.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(modifier = Modifier.size(6.dp).background(Color(0xFFE91E63), CircleShape))
+                            Box(modifier = Modifier.size(6.dp).background(DarkError, CircleShape))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 "LIVE",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFFE91E63),
+                                color = DarkError,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -716,11 +749,11 @@ fun CurrentSessionCard(
             }
             
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         session?.subject ?: "No Classes Scheduled",
                         style = MaterialTheme.typography.titleLarge.copy(
@@ -729,38 +762,29 @@ fun CurrentSessionCard(
                         )
                     )
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                        Icon(Icons.Rounded.Schedule, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(Icons.Rounded.Schedule, contentDescription = null, tint = DarkOnSurfaceVariant, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             session?.time ?: "Check later",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Icon(Icons.Rounded.Room, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            session?.room ?: "N/A",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = DarkOnSurfaceVariant
                         )
                     }
                 }
                 
-                Button(
+                IconButton(
                     onClick = { 
                         if (session != null) {
-                            onNavigate(Screen.TimetableList.createRoute(session.subject)) // Temporary routing hack
+                            onNavigate(Screen.TimetableList.createRoute(session.subject))
                         } else {
                             onNavigate(Screen.MyClass.route)
                         }
                     },
-                    modifier = Modifier.height(40.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A2127)),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp)
+                    modifier = Modifier
+                        .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape)
                 ) {
-                    Text("Details", color = Color.White, fontWeight = FontWeight.Bold)
+                    Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = "Details", tint = Color.White)
                 }
             }
         }
@@ -768,91 +792,38 @@ fun CurrentSessionCard(
 }
 
 @Composable
-fun GridActionCard(title: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Card(
+fun EliteGridActionCard(title: String, icon: ImageVector, gradient: List<Color>, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    EliteCard(
         modifier = modifier
-            .aspectRatio(1f)
+            .aspectRatio(1.1f)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619))
+        gradient = gradient
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Surface(
-                modifier = Modifier.size(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = color.copy(alpha = 0.15f)
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White.copy(alpha = 0.2f)
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(14.dp))
+                Icon(icon, contentDescription = null, tint = Color.Black, modifier = Modifier.padding(12.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 title, 
-                style = MaterialTheme.typography.bodyMedium, 
-                color = Color.White, 
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium, 
+                color = Color.Black, 
+                fontWeight = FontWeight.ExtraBold
             )
         }
     }
 }
 
 @Composable
-fun EliteInsightCard(insight: String, isLoading: Boolean) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
-        shape = RoundedCornerShape(20.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1A2127))
-    ) {
-        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.Top) {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = Color(0xFF1B2D24)
-            ) {
-                Icon(Icons.Rounded.Stars, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.padding(8.dp))
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    "AI INSTITUTIONAL INSIGHT",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4CAF50),
-                        letterSpacing = 1.sp
-                    )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                if (isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth().height(2.dp),
-                        color = Color(0xFF4CAF50),
-                        trackColor = Color.Transparent
-                    )
-                } else {
-                    Text(
-                        insight.ifEmpty { "Projected GPA: 3.8. Focus on 'Algorithmic Complexity' for the upcoming midterm to maintain peak performance." },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f),
-                        lineHeight = 20.sp
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PendingFeesCard(amount: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF111619)),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+fun ElitePendingFeesCard(amount: String, onClick: () -> Unit) {
+    EliteGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -862,7 +833,7 @@ fun PendingFeesCard(amount: String, onClick: () -> Unit) {
                     Text(
                         "PENDING FEES",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
+                        color = DarkOnSurfaceVariant,
                         letterSpacing = 1.sp
                     )
                     Text(
@@ -882,18 +853,56 @@ fun PendingFeesCard(amount: String, onClick: () -> Unit) {
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
-            Button(
+            EliteButton(
+                text = "Settle Account",
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB4C0FF)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Settle Account", color = Color(0xFF090C0E), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
+                gradient = PremiumGradientGold
+            )
         }
     }
 }
 
+
+@Composable
+fun DashboardEliteInsightCard(insight: String, isLoading: Boolean) {
+    EliteGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.Top) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = DarkSecondaryContainer.copy(alpha = 0.2f)
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = DarkSecondary, modifier = Modifier.padding(8.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    "AI INSTITUTIONAL INSIGHT",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = DarkSecondary,
+                        letterSpacing = 1.sp
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                if (isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().height(2.dp),
+                        color = DarkSecondary,
+                        trackColor = Color.Transparent
+                    )
+                } else {
+                    Text(
+                        insight.ifEmpty { "Projected GPA: 3.8. Focus on 'Algorithmic Complexity' for the upcoming midterm to maintain peak performance." },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.7f),
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun SystemLedgerSection() {
@@ -965,14 +974,14 @@ fun LedgerItem(title: String, subtitle: String, time: String, isFirst: Boolean =
 @Composable
 fun DashboardBottomNavigation(currentRoute: String, onNavigate: (String) -> Unit) {
     NavigationBar(
-        containerColor = Color(0xFF090C0E),
+        containerColor = DarkBackground,
         tonalElevation = 0.dp,
         modifier = Modifier.height(85.dp)
     ) {
         val items = listOf(
             Triple(Screen.Dashboard.route, Icons.Rounded.GridView, "Home"),
             Triple(Screen.Messages.route, Icons.Rounded.ChatBubbleOutline, "Messages"),
-            Triple(Screen.MyClass.route, Icons.Rounded.MenuBook, "My Class"),
+            Triple(Screen.MyClass.route, Icons.AutoMirrored.Rounded.MenuBook, "My Class"),
             Triple(Screen.Events.route, Icons.Rounded.CalendarToday, "Events"),
             Triple(Screen.Me.route, Icons.Rounded.PersonOutline, "Me")
         )
@@ -981,27 +990,38 @@ fun DashboardBottomNavigation(currentRoute: String, onNavigate: (String) -> Unit
             val isSelected = currentRoute == route
             NavigationBarItem(
                 icon = { 
-                    if (isSelected) {
-                        Surface(
-                            color = Color(0xFF1A2127),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(
-                                icon, 
-                                contentDescription = label, 
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
-                                tint = Color(0xFF4FC3F7)
-                            )
+                    AnimatedContent(
+                        targetState = isSelected,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(220, delayMillis = 90)) + 
+                            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)) togetherWith
+                            fadeOut(animationSpec = tween(90))
+                        },
+                        label = "navIcon"
+                    ) { selected ->
+                        if (selected) {
+                            Surface(
+                                color = EliteGlassWhite,
+                                shape = RoundedCornerShape(16.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, EliteGlassBorder)
+                            ) {
+                                Icon(
+                                    icon, 
+                                    contentDescription = label, 
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
+                                    tint = DarkPrimary
+                                )
+                            }
+                        } else {
+                            Icon(icon, contentDescription = label, tint = DarkOnSurfaceVariant, modifier = Modifier.size(26.dp))
                         }
-                    } else {
-                        Icon(icon, contentDescription = label, tint = Color.Gray, modifier = Modifier.size(26.dp))
                     }
                 },
                 label = { 
                     Text(
                         label, 
                         style = MaterialTheme.typography.labelSmall, 
-                        color = if (isSelected) Color(0xFF4FC3F7) else Color.Gray,
+                        color = if (isSelected) DarkPrimary else DarkOnSurfaceVariant,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     ) 
                 },
@@ -1018,20 +1038,20 @@ fun DrawerHeader(state: DashboardViewModel.DashboardState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF090C0E))
+            .background(DarkBackground)
             .padding(start = 24.dp, end = 24.dp, top = 60.dp, bottom = 24.dp)
     ) {
         Surface(
             modifier = Modifier.size(64.dp),
             shape = CircleShape,
             color = Color.Transparent,
-            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFD54F))
+            border = androidx.compose.foundation.BorderStroke(2.dp, DarkTertiary)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     Icons.Rounded.Person,
                     contentDescription = null,
-                    tint = Color(0xFFFFD54F),
+                    tint = DarkTertiary,
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -1047,13 +1067,13 @@ fun DrawerHeader(state: DashboardViewModel.DashboardState) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Surface(
-            color = Color(0xFF1B2D24),
+            color = DarkSecondaryContainer.copy(alpha = 0.2f),
             shape = RoundedCornerShape(6.dp)
         ) {
             Text(
                 "ELITE STUDENT",
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                color = Color(0xFF4CAF50),
+                color = DarkSecondary,
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp
@@ -1115,42 +1135,48 @@ fun TeacherDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         item {
-            Column(modifier = Modifier.padding(top = 8.dp)) {
-                Text(
-                    "Elite Faculty, ${state.userName.split(" ").firstOrNull() ?: "User"}",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 32.sp
+            EliteEntranceAnimation(index = 0) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        "Elite Faculty, ${state.userName.split(" ").firstOrNull() ?: "User"}",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 32.sp
+                        )
                     )
-                )
-                Text(
-                    "SIKSHA ACADEMIC MANAGEMENT",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = Color.Gray,
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.Bold
+                    Text(
+                        "SIKSHA ACADEMIC MANAGEMENT",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = DarkPrimary,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
-                )
-            }
-        }
-
-        item {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                AdminStatCard("Students", state.studentCount.toString(), Icons.Rounded.People, Color(0xFF4FC3F7), Modifier.weight(1f))
-                AdminStatCard("Classes", state.classCount.toString(), Icons.Rounded.Class, Color(0xFF4CAF50), Modifier.weight(1f))
-            }
-        }
-
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("Mark Attendance", Icons.Rounded.FactCheck, Color(0xFF4FC3F7), Modifier.weight(1f)) { onNavigate(Screen.AttendanceClassSelect.route) }
-                    GridActionCard("Manage Exams", Icons.Rounded.Quiz, Color(0xFFE91E63), Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
                 }
+            }
+        }
+
+        item {
+            EliteEntranceAnimation(index = 1) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("My Subjects", Icons.Rounded.AutoStories, Color(0xFF9C27B0), Modifier.weight(1f)) { onNavigate(Screen.SubjectList.route) }
-                    GridActionCard("Announcements", Icons.Rounded.Campaign, Color(0xFFFFD54F), Modifier.weight(1f)) { onNavigate(Screen.NotificationList.route) }
+                    EliteStatCard("Students", state.studentCount.toString(), { Icon(Icons.Rounded.People, null, tint = Color.Black) }, PremiumGradientBlue, Modifier.weight(1f))
+                    EliteStatCard("Classes", state.classCount.toString(), { Icon(Icons.Rounded.Class, null, tint = Color.Black) }, PremiumGradientGreen, Modifier.weight(1f))
+                }
+            }
+        }
+
+        item {
+            EliteEntranceAnimation(index = 2) {
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("Mark Attendance", Icons.AutoMirrored.Rounded.FactCheck, PremiumGradientBlue, Modifier.weight(1f)) { onNavigate(Screen.AttendanceClassSelect.route) }
+                        EliteGridActionCard("Manage Exams", Icons.Rounded.Quiz, PremiumGradientPink, Modifier.weight(1f)) { onNavigate(Screen.ExamClassSelect.route) }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("My Subjects", Icons.Rounded.AutoStories, PremiumGradientPurple, Modifier.weight(1f)) { onNavigate(Screen.SubjectList.route) }
+                        EliteGridActionCard("Announcements", Icons.Rounded.Campaign, PremiumGradientGold, Modifier.weight(1f)) { onNavigate(Screen.NotificationList.route) }
+                    }
                 }
             }
         }
@@ -1158,7 +1184,9 @@ fun TeacherDashboard(state: DashboardViewModel.DashboardState, onNavigate: (Stri
         // Upcoming Holidays Section
         if (state.holidays.isNotEmpty()) {
             item {
-                UpcomingHolidaysSection(state.holidays)
+                EliteEntranceAnimation(index = 3) {
+                    UpcomingHolidaysSection(state.holidays)
+                }
             }
         }
         
@@ -1174,60 +1202,68 @@ fun AdminDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         item {
-            Column(modifier = Modifier.padding(top = 8.dp)) {
+            EliteEntranceAnimation(index = 0) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(
+                        "Elite Admin, ${state.userName.split(" ").firstOrNull() ?: "User"}",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 32.sp
+                        )
+                    )
+                    Text(
+                        "SIKSHA CENTRAL CONTROL",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = DarkPrimary,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+        }
+
+        item {
+            EliteEntranceAnimation(index = 1) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        EliteStatCard("Total Students", state.studentCount.toString(), { Icon(Icons.Rounded.People, null, tint = Color.Black) }, PremiumGradientBlue, Modifier.weight(1f))
+                        EliteStatCard("Total Teachers", state.teacherCount.toString(), { Icon(Icons.Rounded.Person, null, tint = Color.Black) }, PremiumGradientGreen, Modifier.weight(1f))
+                    }
+                    EliteStatCard("Active Classes", state.classCount.toString(), { Icon(Icons.Rounded.Class, null, tint = Color.Black) }, PremiumGradientPurple)
+                }
+            }
+        }
+
+        item {
+            EliteEntranceAnimation(index = 2) {
                 Text(
-                    "Elite Admin, ${state.userName.split(" ").firstOrNull() ?: "User"}",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    "ADMINISTRATIVE ACTIONS",
+                    style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 32.sp
-                    )
-                )
-                Text(
-                    "SIKSHA CENTRAL CONTROL",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = Color.Gray,
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.Bold
+                        color = DarkOnSurfaceVariant,
+                        letterSpacing = 1.sp
                     )
                 )
             }
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    AdminStatCard("Total Students", state.studentCount.toString(), Icons.Rounded.People, Color(0xFF4FC3F7), Modifier.weight(1f))
-                    AdminStatCard("Total Teachers", state.teacherCount.toString(), Icons.Rounded.Person, Color(0xFF4CAF50), Modifier.weight(1f))
-                }
-                AdminStatCard("Active Classes", state.classCount.toString(), Icons.Rounded.Class, Color(0xFF9C27B0))
-            }
-        }
-
-        item {
-            Text(
-                "ADMINISTRATIVE ACTIONS",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
-                    letterSpacing = 1.sp
-                )
-            )
-        }
-
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("Teachers", Icons.Rounded.School, Color(0xFF4CAF50), Modifier.weight(1f)) { onNavigate(Screen.TeacherList.route) }
-                    GridActionCard("Students", Icons.Rounded.People, Color(0xFF4FC3F7), Modifier.weight(1f)) { onNavigate(Screen.StudentList.route) }
-                }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("Classes", Icons.Rounded.Class, Color(0xFF9C27B0), Modifier.weight(1f)) { onNavigate(Screen.ClassList.route) }
-                    GridActionCard("Fees Control", Icons.Rounded.Payments, Color(0xFFFFD54F), Modifier.weight(1f)) { onNavigate(Screen.FeeList.route) }
-                }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    GridActionCard("Inventory", Icons.Rounded.Inventory, Color(0xFFE91E63), Modifier.weight(1f)) { onNavigate(Screen.Inventory.route) }
-                    GridActionCard("Advanced", Icons.Rounded.SettingsApplications, Color(0xFF607D8B), Modifier.weight(1f)) { onNavigate(Screen.AdminPortal.route) }
+            EliteEntranceAnimation(index = 3) {
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("Teachers", Icons.Rounded.School, PremiumGradientGreen, Modifier.weight(1f)) { onNavigate(Screen.TeacherList.route) }
+                        EliteGridActionCard("Students", Icons.Rounded.People, PremiumGradientBlue, Modifier.weight(1f)) { onNavigate(Screen.StudentList.route) }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("Classes", Icons.Rounded.Class, PremiumGradientPurple, Modifier.weight(1f)) { onNavigate(Screen.ClassList.route) }
+                        EliteGridActionCard("Fees Control", Icons.Rounded.Payments, PremiumGradientGold, Modifier.weight(1f)) { onNavigate(Screen.FeeList.route) }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        EliteGridActionCard("Inventory", Icons.Rounded.Inventory, PremiumGradientPink, Modifier.weight(1f)) { onNavigate(Screen.Inventory.route) }
+                        EliteGridActionCard("Advanced", Icons.Rounded.SettingsApplications, listOf(SikshaSlate, Color.Black), Modifier.weight(1f)) { onNavigate(Screen.AdminPortal.route) }
+                    }
                 }
             }
         }
@@ -1235,7 +1271,9 @@ fun AdminDashboard(state: DashboardViewModel.DashboardState, onNavigate: (String
         // Upcoming Holidays Section
         if (state.holidays.isNotEmpty()) {
             item {
-                UpcomingHolidaysSection(state.holidays)
+                EliteEntranceAnimation(index = 4) {
+                    UpcomingHolidaysSection(state.holidays)
+                }
             }
         }
         

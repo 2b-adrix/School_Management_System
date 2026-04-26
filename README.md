@@ -1,112 +1,97 @@
-# EduSync SaaS: Production-Grade School Management System
+# SIKSHA: The Elite School Management System 🎓
 
-EduSync is a comprehensive, multi-tenant SaaS platform designed to streamline school operations. Built with modern technologies and a focus on scalability, it provides a centralized system for administrators, teachers, and students to manage academic and administrative tasks.
-
----
-
-## 🚀 Commercial Value Proposition
-**Market Ready & Scalable**: Engineered for a SaaS business model, allowing a single deployment to serve thousands of schools with complete data isolation.
-*   **Multi-Tenancy**: Built-in `school_id` scoping at the repository layer.
-*   **Enterprise Security**: Role-Based Access Control (RBAC) and JWT-based authentication via Supabase.
-*   **Modern UX**: Clean, intuitive Material 3 interface for Android.
+SIKSHA is a high-performance, visually stunning, and feature-rich school management system built with modern Android technologies. Designed with an "Elite" aesthetic, it provides a seamless experience for Students, Teachers, and Administrators.
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Key Highlights
 
-### Mobile (Android)
-*   **Language**: Kotlin
+*   **Elite UI/UX**: Crafted with Jetpack Compose and Material 3, featuring dark mode optimization, smooth animations, and a premium "Elite" design language.
+*   **AI-Powered Insights**: Integrated with Google Gemini (Siksha Brain) to provide academic performance analysis and automated insights.
+*   **Multi-Role Architecture**: Tailored dashboards and functionalities for Students, Teachers, and Admins.
+*   **Real-time Management**: Live attendance tracking, session management, and instant notifications.
+*   **Secure & Robust**: Built on a solid foundation of Clean Architecture and Hilt for dependency injection.
+
+---
+
+## 🛠️ Technical Stack
+
 *   **UI Framework**: Jetpack Compose (Material 3)
+*   **Language**: 100% Kotlin
 *   **Architecture**: MVVM + Clean Architecture
-*   **Dependency Injection**: Hilt
-*   **Networking**: Retrofit + Ktor (for Supabase)
-*   **Backend-as-a-Service**: Supabase (Postgrest, Auth, Storage)
-*   **Local Storage**: DataStore (Preferences & Session Management)
-
-### Backend & Database
-*   **Infrastructure**: Supabase (PostgreSQL)
-*   **Storage**: Supabase Storage (for profiles and documents)
-*   **Security**: Row Level Security (RLS) & Multi-tenant data scoping.
+*   **Dependency Injection**: Hilt (Dagger)
+*   **Database & Auth**: Supabase (PostgreSQL, Auth, Storage)
+*   **Local Storage**: Room Persistence & DataStore
+*   **AI Integration**: Google Generative AI (Gemini)
+*   **Animations**: Lottie & Compose Animations
+*   **Networking**: Retrofit & Ktor
+*   **Image Loading**: Coil
 
 ---
 
-## 📖 System Features
+## 📱 Features
 
-### 1. Multi-Tenant Core
-*   **Isolated Environments**: Every school has its own logical data space.
-*   **Unified Auth**: Secure login with role redirection.
-*   **Session Management**: Persistent school context across the app.
+### 👨‍🎓 Student Dashboard
+*   **Attendance Tracking**: Circular progress indicators for real-time attendance monitoring.
+*   **Live Sessions**: View current/upcoming classes with "LIVE" status indicators.
+*   **Siksha AI Insight**: Personal academic assistant for performance tips.
+*   **Academic Ledger**: Track all system activities (assignments, grades, etc.).
+*   **Fee Management**: View dues and simulate secure payments via "Siksha Pay".
 
-### 2. Administrator Module
-*   **Stats Dashboard**: Real-time counts of students, teachers, and classes.
-*   **Staff Management**: Add, update, and assign teachers.
-*   **Academic Setup**: Configure classes, sections, and subjects.
-*   **Fee Management**: Define fee structures and track collections.
+### 👩‍🏫 Teacher Portal
+*   **Smart Attendance**: Effortless attendance marking for assigned classes.
+*   **Exam Management**: Create and manage exams and grading.
+*   **Resource Center**: Access subjects and announcements.
+*   **Faculty Insights**: Quick stats on student counts and active classes.
 
-### 3. Teacher Module
-*   **Smart Attendance**: Quick, subject-wise attendance marking.
-*   **Exam & Grading**: Create exams and enter student marks.
-*   **Classroom Management**: View assigned class lists and timetables.
-*   **Announcements**: Post notices to specific classes or the entire school.
-
-### 4. Student/Parent Module
-*   **Personal Dashboard**: View daily timetable, fee dues, and recent results.
-*   **Performance Tracking**: Access report cards and exam schedules.
-*   **Stay Informed**: Receive real-time announcements and school news.
-*   **Profile Management**: Update personal details and view academic history.
+### 🛡️ Admin Central Control
+*   **Institutional Overview**: Real-time stats for the entire school (Total Students/Teachers/Classes).
+*   **Inventory Management**: Track school assets and supplies.
+*   **Fee Control**: Oversee financial records and fee structures.
+*   **User Management**: Full CRUD operations for students and faculty.
 
 ---
 
-## 📂 Project Structure (Clean Architecture)
+## 📂 Project Structure
 
 ```
 app/src/main/java/com/example/schoolmanagementsystem/
-├── data/
-│   ├── manager/       # Session & DataStore management
-│   ├── remote/        # Supabase API clients
-│   └── repository/    # Multi-tenant scoped implementations
-├── di/                # Hilt Modules (Supabase, Repositories)
-├── domain/
-│   ├── model/         # Multi-tenant data entities
-│   ├── repository/    # Domain interfaces
-│   └── util/          # Resource wrappers (Success/Error/Loading)
-├── ui/
-│   ├── theme/         # Material 3 Theme (Light/Dark/System)
-│   ├── components/    # Reusable UI widgets
-│   ├── navigation/    # Screen routes and NavHost
-│   └── features/      # Feature modules (Dashboard, Attendance, etc.)
-└── MainActivity.kt    # Root entry point with global state
+├── backend/            # Data & Domain Layers
+│   ├── data/           # Repository implementations, Remote/Local sources
+│   ├── domain/         # Models, Repository interfaces, Use cases
+│   └── di/             # Hilt dependency injection modules
+├── frontend/           # UI Layer
+│   ├── ui/             # Compose Screens, ViewModels, Components
+│   ├── navigation/     # App routing logic
+│   └── theme/          # SIKSHA Elite design system (Colors, Typography)
+└── SchoolApplication.kt # Application entry point
 ```
 
 ---
 
-## 🔐 Security & Multi-Tenancy Implementation
+## 🚀 Getting Started
 
-EduSync uses a "Shared Schema" approach with strict data filtering:
-1.  **Repository Filtering**: Every data request automatically injects the logged-in user's `school_id`.
-2.  **Context Injection**: New records (Students, Exams, etc.) automatically inherit the `school_id` from the secure session context.
-3.  **Role Guarding**: UI components and navigation routes are protected based on the user's role (Super Admin, School Admin, Teacher, Student).
-
----
-
-## 🛠️ Getting Started
-
-### Prerequisites
-*   Android Studio Ladybug+
-*   JDK 17+
-*   Supabase Project (URL & Service Role Key)
-
-### Installation
-1.  Clone the repository.
-2.  Update `SupabaseModule.kt` with your Supabase credentials.
-3.  Sync Gradle and build the project.
-4.  Deploy to an Android Emulator or physical device.
+1.  **Clone the Repo**: `git clone https://github.com/your-username/siksha-app.git`
+2.  **Configuration**: Add your `SUPABASE_URL` and `SUPABASE_KEY` to the `SupabaseModule`.
+3.  **AI Setup**: Configure your Gemini API key in `GenerativeAIService`.
+4.  **Build**: Open in Android Studio (Ladybug or newer) and sync Gradle.
+5.  **Run**: Deploy to an emulator or device (API 26+ recommended).
 
 ---
 
-## 📈 Roadmap
-- [ ] Push Notifications for announcements.
-- [ ] Offline data synchronization.
-- [ ] AI-driven student performance analytics.
-- [ ] Integration with payment gateways for fee collection.
-```
+## 🔮 Future Roadmap
+
+- [ ] **Siksha Pay Integration**: Live payment gateway for real transactions.
+- [ ] **Advanced Analytics**: Detailed graph-based performance reports.
+- [ ] **Offline Mode**: Local caching for areas with poor connectivity.
+- [ ] **Parental Portal**: Dedicated access for parents to track child progress.
+
+---
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+**SIKSHA** — *Empowering Education through Technology.* 🚀
