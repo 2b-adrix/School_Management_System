@@ -11,17 +11,16 @@ data class AttendanceRecord(
     val id: String? = null,
     
     @ManyToOne
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "student_id", nullable = false)
     val student: Student,
     
-    @ManyToOne
-    @JoinColumn(name = "class_id")
-    val schoolClass: SchoolClass,
-    
+    @Column(nullable = false)
     val date: LocalDate = LocalDate.now(),
     
     @Enumerated(EnumType.STRING)
-    val status: AttendanceStatus
+    val status: AttendanceStatus,
+    
+    val remarks: String? = null
 )
 
 enum class AttendanceStatus {

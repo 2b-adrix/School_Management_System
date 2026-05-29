@@ -12,11 +12,14 @@ data class Subject(
     @Column(nullable = false)
     val name: String,
     
+    @Column(nullable = false, unique = true)
+    val code: String,
+    
+    val description: String? = null,
+    
+    val schoolId: String,
+
     @ManyToOne
     @JoinColumn(name = "class_id")
-    val schoolClass: SchoolClass,
-    
-    @ManyToOne
-    @JoinColumn(name = "teacher_id")
-    val teacher: Teacher? = null
+    val schoolClass: SchoolClass? = null
 )

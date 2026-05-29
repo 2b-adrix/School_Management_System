@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface SubjectRepository : JpaRepository<Subject, String> {
+    fun findBySchoolId(schoolId: String): List<Subject>
     fun findBySchoolClassId(classId: String): List<Subject>
 }

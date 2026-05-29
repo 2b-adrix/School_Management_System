@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface StudentRepository : JpaRepository<Student, String> {
-    fun findByRollNumber(rollNumber: String): Student?
+    fun findByUserEmail(email: String): Student?
+    fun findBySchoolClassId(classId: String): List<Student>
 }

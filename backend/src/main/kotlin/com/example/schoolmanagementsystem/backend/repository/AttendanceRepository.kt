@@ -7,6 +7,6 @@ import java.time.LocalDate
 
 @Repository
 interface AttendanceRepository : JpaRepository<AttendanceRecord, String> {
-    fun findByStudentIdAndDate(studentId: String, date: LocalDate): AttendanceRecord?
-    fun findBySchoolClassIdAndDate(classId: String, date: LocalDate): List<AttendanceRecord>
+    fun findByStudentId(studentId: String): List<AttendanceRecord>
+    fun findByStudentSchoolClassIdAndDate(classId: String, date: LocalDate): List<AttendanceRecord>
 }
