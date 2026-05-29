@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/siksha_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+  jpa:
+    hibernate:
+      ddl-auto: validate # Use validate for production to prevent accidental schema changes
+    show-sql: false
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437}
+  expiration: 86400000
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:AIzaSyBQmrjLg3GbLqeuENLsc5Jogb_DfaVRnwc}
