@@ -2,6 +2,7 @@ package com.example.schoolmanagementsystem.backend.domain.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
 @Serializable
 enum class UserRole {
@@ -13,17 +14,12 @@ enum class UserRole {
 
 @Serializable
 data class User(
-    @SerialName("id")
     val id: String,
-    @SerialName("name")
     val name: String,
-    @SerialName("email")
     val email: String,
-    @SerialName("role")
     val role: UserRole,
-    @SerialName("school_id")
+    @SerializedName("schoolId")
     val schoolId: String,
-    @SerialName("profile_image_url")
+    @SerializedName("profileImageUrl")
     val profileImageUrl: String? = null
 )
-

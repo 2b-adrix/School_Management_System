@@ -1,11 +1,15 @@
 services:
   app:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: siksha-app
+
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=db
       - DB_USERNAME=postgres
       - DB_PASSWORD=password
       - JWT_SECRET=5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
@@ -14,6 +18,8 @@ services:
       db:
         condition: service_healthy
     restart: always
+
+
 
   db:
     image: postgres:15-alpine

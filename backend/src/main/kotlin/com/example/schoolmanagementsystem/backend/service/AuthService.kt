@@ -1,8 +1,9 @@
 package com.example.schoolmanagementsystem.backend.service
 
-import com.example.schoolmanagementsystem.backend.controller.AuthResponse
 import com.example.schoolmanagementsystem.backend.controller.LoginRequest
 import com.example.schoolmanagementsystem.backend.controller.SignUpRequest
+import com.example.schoolmanagementsystem.backend.dto.AuthResponse
+import com.example.schoolmanagementsystem.backend.dto.UserDto
 import com.example.schoolmanagementsystem.backend.model.Student
 import com.example.schoolmanagementsystem.backend.model.Teacher
 import com.example.schoolmanagementsystem.backend.model.User
@@ -29,6 +30,10 @@ class AuthService(
 
     @Transactional
     fun signUp(request: SignUpRequest): AuthResponse {
+        if (userRepository.findByEmail(request.email) != null) {
+            throw Exception("User with email ${request.email} already exists")
+        }
+
         val user = User(
             name = request.fullName,
             email = request.email,
@@ -60,7 +65,10 @@ class AuthService(
         }
 
         val jwtToken = jwtService.generateToken(savedUser)
-        return AuthResponse(token = jwtToken, user = savedUser)
+        return AuthResponse(
+            token = jwtToken,
+            user = savedUser.toDto()
+        )
     }
 
     fun login(request: LoginRequest): AuthResponse {
@@ -73,6 +81,17 @@ class AuthService(
         val user = userRepository.findByEmail(request.email)
             ?: throw Exception("User not found")
         val jwtToken = jwtService.generateToken(user)
-        return AuthResponse(token = jwtToken, user = user)
+        return AuthResponse(
+            token = jwtToken,
+            user = user.toDto()
+        )
     }
+
+    private fun User.toDto() = UserDto(
+        id = id,
+        name = name,
+        email = email,
+        role = role,
+        schoolId = schoolId
+    )
 }

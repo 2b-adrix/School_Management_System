@@ -26,13 +26,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): Resource<User> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.login(LoginRequest(email, password))
-            val user = response.user
-
-            // Excellent Backend: Cache user locally
-            userDao.insertUser(user.toEntity())
-            sessionManager.saveSession(user.name, user.email, user.role, user.schoolId)
             
-            Resource.Success(user)
+            if (response.success && response.data != null) {
+                val user = response.data.user
+                // Excellent Backend: Cache user locally
+                userDao.insertUser(user.toEntity())
+                sessionManager.saveSession(user.name, user.email, user.role, user.schoolId)
+                Resource.Success(user)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Authentication failed")
         }
@@ -62,9 +65,14 @@ class AuthRepositoryImpl @Inject constructor(
             val response = apiService.signUp(
                 SignUpRequest(email, password, fullName, role.name, schoolId)
             )
-            val user = response.user
-            userDao.insertUser(user.toEntity())
-            Resource.Success(user)
+            
+            if (response.success && response.data != null) {
+                val user = response.data.user
+                userDao.insertUser(user.toEntity())
+                Resource.Success(user)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Sign up failed")
         }

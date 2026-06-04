@@ -10,13 +10,30 @@ class StudentService(private val studentRepository: StudentRepository) {
 
     fun getCurrentStudentProfile(): Student {
         val email = SecurityContextHolder.getContext().authentication.name
-        // In a real app, you might want to join with User to find by email
-        // For simplicity, let's assume we have a findByUserEmail in StudentRepo
-        return studentRepository.findAll().find { it.user.email == email }
+        return studentRepository.findByUserEmail(email)
             ?: throw Exception("Student profile not found")
+    }
+
+    fun getAllStudents(): List<Student> {
+        return studentRepository.findAll()
     }
 
     fun getStudentById(id: String): Student {
         return studentRepository.findById(id).orElseThrow { Exception("Student not found") }
+    }
+
+    fun saveStudent(student: Student): Student {
+        return studentRepository.save(student)
+    }
+
+    fun updateStudent(id: String, student: Student): Student {
+        if (!studentRepository.existsById(id)) {
+            throw Exception("Student not found")
+        }
+        return studentRepository.save(student.copy(id = id))
+    }
+
+    fun deleteStudent(id: String) {
+        studentRepository.deleteById(id)
     }
 }

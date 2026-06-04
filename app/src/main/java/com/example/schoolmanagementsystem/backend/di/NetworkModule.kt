@@ -23,7 +23,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://10.0.2.2:8080/api/v1/" // Correct endpoint for local Spring Boot
+    private const val BASE_URL = "http://10.108.153.102:8080/api/v1/" // Correct endpoint for your local Wi-Fi IP
 
     @Provides
     @Singleton

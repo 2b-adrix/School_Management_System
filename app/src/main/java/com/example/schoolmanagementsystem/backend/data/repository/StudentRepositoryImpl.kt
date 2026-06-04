@@ -4,18 +4,17 @@ import com.example.schoolmanagementsystem.backend.data.local.dao.StudentDao
 import com.example.schoolmanagementsystem.backend.data.local.entity.toDomain
 import com.example.schoolmanagementsystem.backend.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.Student
 import com.example.schoolmanagementsystem.backend.domain.repository.StudentRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class StudentRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
+    private val apiService: SikshaApiService,
     private val sessionManager: SessionManager,
     private val studentDao: StudentDao
 ) : StudentRepository {
@@ -30,22 +29,17 @@ class StudentRepositoryImpl @Inject constructor(
         }
 
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val remoteStudents = postgrest["students"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId)
-                    }
+            val response = apiService.getAllStudents()
+            if (response.success && response.data != null) {
+                val remoteStudents = response.data
+                // Sync local DB
+                remoteStudents.forEach { student ->
+                    studentDao.insertStudent(student.toEntity())
                 }
-                .decodeList<Student>()
-            
-            // Sync local DB in a single transaction if possible, 
-            // but here we'll just do it safely on IO
-            remoteStudents.forEach { student ->
-                studentDao.insertStudent(student.toEntity())
+                emit(Resource.Success(remoteStudents))
+            } else {
+                emit(Resource.Error(response.message))
             }
-            
-            emit(Resource.Success(remoteStudents))
         } catch (e: Exception) {
             if (localStudents.isEmpty()) {
                 emit(Resource.Error(e.message ?: "An error occurred"))
@@ -61,19 +55,15 @@ class StudentRepositoryImpl @Inject constructor(
                 return@withContext Resource.Success(localStudent.toDomain())
             }
 
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val student = postgrest["students"]
-                .select(columns = Columns.ALL) {
-                    filter {
-                        eq("id", id)
-                        eq("school_id", schoolId)
-                    }
-                }
-                .decodeSingle<Student>()
-            
-            // Cache locally
-            studentDao.insertStudent(student.toEntity())
-            Resource.Success(student)
+            val response = apiService.getStudentById(id)
+            if (response.success && response.data != null) {
+                val student = response.data
+                // Cache locally
+                studentDao.insertStudent(student.toEntity())
+                Resource.Success(student)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Student not found")
         }
@@ -81,51 +71,40 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun addStudent(student: Student): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val studentWithId = student.copy(schoolId = schoolId)
-            
-            // Save locally first
-            studentDao.insertStudent(studentWithId.toEntity())
-            
-            // Sync to remote
-            postgrest["students"].insert(studentWithId)
-            Resource.Success(Unit)
+            val response = apiService.addStudent(student)
+            if (response.success && response.data != null) {
+                val savedStudent = response.data
+                studentDao.insertStudent(savedStudent.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
-            // Even if remote fails, it's in local DB
-            Resource.Success(Unit)
+            Resource.Error(e.message ?: "Failed to add student")
         }
     }
 
     override suspend fun bulkAddStudents(students: List<Student>): Resource<Unit> = withContext(Dispatchers.IO) {
+        // For simplicity, we could loop or add a bulk endpoint to the backend
+        // For now, let's just do it one by one or leave it for later
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val studentsWithId = students.map { it.copy(schoolId = schoolId) }
-            
-            // Bulk insert locally
-            studentsWithId.forEach { studentDao.insertStudent(it.toEntity()) }
-            
-            postgrest["students"].insert(studentsWithId)
+            students.forEach { addStudent(it) }
             Resource.Success(Unit)
         } catch (e: Exception) {
-            Resource.Success(Unit)
+            Resource.Error(e.message ?: "Bulk add failed")
         }
     }
 
     override suspend fun updateStudent(student: Student): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val updatedStudent = student.copy(schoolId = schoolId)
-            
-            // Update local
-            studentDao.updateStudent(updatedStudent.toEntity())
-            
-            postgrest["students"].update(updatedStudent) {
-                filter {
-                    eq("id", student.id)
-                    eq("school_id", schoolId)
-                }
+            val response = apiService.updateStudent(student.id, student)
+            if (response.success && response.data != null) {
+                val updatedStudent = response.data
+                studentDao.updateStudent(updatedStudent.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to update student")
         }
@@ -133,18 +112,13 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun deleteStudent(student: Student): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            
-            // Delete local
-            studentDao.deleteStudent(student.toEntity())
-
-            postgrest["students"].delete {
-                filter {
-                    eq("id", student.id)
-                    eq("school_id", schoolId)
-                }
+            val response = apiService.deleteStudent(student.id)
+            if (response.success) {
+                studentDao.deleteStudent(student.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to delete student")
         }

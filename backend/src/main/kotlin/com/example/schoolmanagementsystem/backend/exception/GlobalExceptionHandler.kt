@@ -10,30 +10,18 @@ import java.time.LocalDateTime
 class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException::class)
-    fun handleResourceNotFound(ex: ResourceNotFoundException): ResponseEntity<ErrorResponse> {
-        val error = ErrorResponse(
-            status = HttpStatus.NOT_FOUND.value(),
-            message = ex.message ?: "Resource not found",
-            timestamp = LocalDateTime.now()
-        )
-        return ResponseEntity(error, HttpStatus.NOT_FOUND)
+    fun handleResourceNotFound(ex: ResourceNotFoundException): ResponseEntity<ApiResponse<Unit>> {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.error(ex.message ?: "Resource not found"))
     }
 
     @ExceptionHandler(Exception::class)
-    fun handleGeneralException(ex: Exception): ResponseEntity<ErrorResponse> {
-        val error = ErrorResponse(
-            status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            message = ex.message ?: "An unexpected error occurred",
-            timestamp = LocalDateTime.now()
-        )
-        return ResponseEntity(error, HttpStatus.INTERNAL_SERVER_ERROR)
+    fun handleGeneralException(ex: Exception): ResponseEntity<ApiResponse<Unit>> {
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.error(ex.message ?: "An unexpected error occurred"))
     }
 }
 
 class ResourceNotFoundException(message: String) : RuntimeException(message)
-
-data class ErrorResponse(
-    val status: Int,
-    val message: String,
-    val timestamp: LocalDateTime
-)
