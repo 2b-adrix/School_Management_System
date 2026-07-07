@@ -69,7 +69,7 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindTimetableRepository(
-        timetableRepositoryImpl: SpringTimetableRepositoryImpl
+        timetableRepositoryImpl: TimetableRepositoryImpl
     ): TimetableRepository
 
     @Binds

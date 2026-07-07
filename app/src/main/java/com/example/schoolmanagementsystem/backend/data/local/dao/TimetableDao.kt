@@ -10,7 +10,7 @@ interface TimetableDao {
     fun getTimetableForClass(classId: String): Flow<List<TimetableEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(timetable: List<TimetableEntity>)
+    suspend fun insertTimetable(entries: List<TimetableEntity>)
 
     @Query("DELETE FROM timetable WHERE classId = :classId")
     suspend fun clearTimetableForClass(classId: String)

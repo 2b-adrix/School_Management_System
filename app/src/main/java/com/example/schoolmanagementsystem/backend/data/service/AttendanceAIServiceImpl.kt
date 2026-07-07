@@ -11,7 +11,6 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
-import io.github.jan.supabase.postgrest.Postgrest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

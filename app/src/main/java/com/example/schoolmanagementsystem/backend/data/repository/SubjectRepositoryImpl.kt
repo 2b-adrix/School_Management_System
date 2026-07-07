@@ -1,51 +1,71 @@
 package com.example.schoolmanagementsystem.backend.data.repository
 
+import com.example.schoolmanagementsystem.backend.data.local.dao.SubjectDao
+import com.example.schoolmanagementsystem.backend.data.local.entity.toDomain
+import com.example.schoolmanagementsystem.backend.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.Subject
 import com.example.schoolmanagementsystem.backend.domain.repository.SubjectRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SubjectRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
-    private val sessionManager: SessionManager
+    private val apiService: SikshaApiService,
+    private val sessionManager: SessionManager,
+    private val subjectDao: SubjectDao
 ) : SubjectRepository {
+
     override fun getAllSubjects(): Flow<Resource<List<Subject>>> = flow {
-        emit(Resource.Loading())
+        // Emit local data immediately
+        val localData = subjectDao.getAllSubjects().first()
+        if (localData.isNotEmpty()) {
+            emit(Resource.Success(localData.map { it.toDomain() }))
+        } else {
+            emit(Resource.Loading())
+        }
+
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull()
-            val subjects = postgrest["subjects"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId ?: "")
-                    }
+            val response = apiService.getAllSubjects()
+            if (response.success && response.data != null) {
+                val remoteData = response.data
+                remoteData.forEach { subject ->
+                    subjectDao.insertSubject(subject.toEntity())
                 }
-                .decodeList<Subject>()
-            emit(Resource.Success(subjects))
+                emit(Resource.Success(remoteData))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An error occurred"))
+            if (localData.isEmpty()) {
+                emit(Resource.Error(e.message ?: "An error occurred"))
+            }
         }
     }.flowOn(Dispatchers.IO)
 
     override suspend fun getSubjectById(id: String): Resource<Subject> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val subject = postgrest["subjects"]
-                .select {
-                    filter {
-                        eq("id", id)
-                        eq("school_id", schoolId)
-                    }
+            // Try local first
+            val localData = subjectDao.getSubjectById(id)
+            if (localData != null) {
+                return@withContext Resource.Success(localData.toDomain())
+            }
+
+            val response = apiService.getAllSubjects() // Backend might need specific getById
+            if (response.success && response.data != null) {
+                val subject = response.data.find { it.id == id }
+                if (subject != null) {
+                    subjectDao.insertSubject(subject.toEntity())
+                    Resource.Success(subject)
+                } else {
+                    Resource.Error("Subject not found")
                 }
-                .decodeSingle<Subject>()
-            Resource.Success(subject)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Subject not found")
         }
@@ -53,10 +73,13 @@ class SubjectRepositoryImpl @Inject constructor(
 
     override suspend fun addSubject(subject: Subject): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val subjectWithSchoolId = subject.copy(schoolId = schoolId)
-            postgrest["subjects"].insert(subjectWithSchoolId)
-            Resource.Success(Unit)
+            val response = apiService.addSubject(subject)
+            if (response.success && response.data != null) {
+                subjectDao.insertSubject(response.data.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to add subject")
         }
@@ -64,13 +87,8 @@ class SubjectRepositoryImpl @Inject constructor(
 
     override suspend fun updateSubject(subject: Subject): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["subjects"].update(subject.copy(schoolId = schoolId)) {
-                filter {
-                    eq("id", subject.id)
-                    eq("school_id", schoolId)
-                }
-            }
+            // Placeholder: Backend might need update endpoint
+            subjectDao.updateSubject(subject.toEntity())
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to update subject")
@@ -79,17 +97,11 @@ class SubjectRepositoryImpl @Inject constructor(
 
     override suspend fun deleteSubject(subject: Subject): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["subjects"].delete {
-                filter {
-                    eq("id", subject.id)
-                    eq("school_id", schoolId)
-                }
-            }
+            // Placeholder: Backend might need delete endpoint
+            subjectDao.deleteSubject(subject.toEntity())
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to delete subject")
         }
     }
 }
-

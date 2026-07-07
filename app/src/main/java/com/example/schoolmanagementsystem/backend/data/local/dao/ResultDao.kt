@@ -12,7 +12,12 @@ interface ResultDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertResult(result: ResultEntity): Long
 
+    @Update
+    suspend fun updateResult(result: ResultEntity): Int
+
+    @Delete
+    suspend fun deleteResult(result: ResultEntity): Int
+
     @Query("SELECT * FROM results WHERE studentId = :studentId")
     fun getResultsByStudent(studentId: String): Flow<List<ResultEntity>>
 }
-

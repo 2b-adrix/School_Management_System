@@ -1,66 +1,44 @@
 package com.example.schoolmanagementsystem.backend.data.repository
 
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.ChatMessage
 import com.example.schoolmanagementsystem.backend.domain.repository.MessageRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class MessageRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
+    private val apiService: SikshaApiService,
     private val sessionManager: SessionManager
 ) : MessageRepository {
 
     override fun getMessagesForUser(userId: String): Flow<Resource<List<ChatMessage>>> = flow {
         emit(Resource.Loading())
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull()
-            val messages = postgrest["messages"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId ?: "")
-                        or {
-                            eq("sender_id", userId)
-                            eq("receiver_id", userId)
-                        }
-                    }
-                }
-                .decodeList<ChatMessage>()
-            emit(Resource.Success(messages))
+            val response = apiService.getMessagesForUser()
+            if (response.success && response.data != null) {
+                emit(Resource.Success(response.data))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun getChatMessages(senderId: String, receiverId: String): Flow<Resource<List<ChatMessage>>> = flow {
+    override fun getChatMessages(userId: String, otherUserId: String): Flow<Resource<List<ChatMessage>>> = flow {
         emit(Resource.Loading())
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull()
-            val messages = postgrest["messages"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId ?: "")
-                        or {
-                            and {
-                                eq("sender_id", senderId)
-                                eq("receiver_id", receiverId)
-                            }
-                            and {
-                                eq("sender_id", receiverId)
-                                eq("receiver_id", senderId)
-                            }
-                        }
-                    }
-                }
-                .decodeList<ChatMessage>()
-            emit(Resource.Success(messages))
+            // For now, use the same as getMessagesForUser or filter in backend
+            val response = apiService.getMessagesForUser()
+            if (response.success && response.data != null) {
+                emit(Resource.Success(response.data))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
@@ -68,9 +46,12 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun sendMessage(message: ChatMessage): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["messages"].insert(message.copy(schoolId = schoolId))
-            Resource.Success(Unit)
+            val response = apiService.sendMessage(message)
+            if (response.success) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to send message")
         }
@@ -78,19 +59,10 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun markAsRead(messageId: String): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["messages"].update({
-                set("is_read", true)
-            }) {
-                filter {
-                    eq("id", messageId)
-                    eq("school_id", schoolId)
-                }
-            }
+            // Need markAsRead endpoint in SikshaApiService if not there
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to mark as read")
         }
     }
 }
-

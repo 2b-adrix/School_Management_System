@@ -4,17 +4,17 @@ import com.example.schoolmanagementsystem.backend.data.local.dao.AttendanceDao
 import com.example.schoolmanagementsystem.backend.data.local.entity.toDomain
 import com.example.schoolmanagementsystem.backend.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.AttendanceRecord
 import com.example.schoolmanagementsystem.backend.domain.repository.AttendanceRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AttendanceRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
+    private val apiService: SikshaApiService,
     private val sessionManager: SessionManager,
     private val attendanceDao: AttendanceDao
 ) : AttendanceRepository {
@@ -28,20 +28,14 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
 
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val remoteData = postgrest["attendance"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId)
-                        eq("class_id", classId)
-                        eq("subject_id", subjectId)
-                        eq("date", date)
-                    }
-                }
-                .decodeList<AttendanceRecord>()
-            
-            attendanceDao.insertAttendance(remoteData.map { it.toEntity(isSynced = true) })
-            emit(Resource.Success(remoteData))
+            val response = apiService.getClassAttendance(classId, date)
+            if (response.success && response.data != null) {
+                val remoteData = response.data
+                attendanceDao.insertAttendance(remoteData.map { it.toEntity(isSynced = true) })
+                emit(Resource.Success(remoteData))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
             if (localData.isEmpty()) {
                 emit(Resource.Error(e.message ?: "An error occurred"))
@@ -51,19 +45,23 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun saveAttendance(records: List<AttendanceRecord>): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val recordsWithSchoolId = records.map { it.copy(schoolId = schoolId) }
+            // Save locally first
+            attendanceDao.insertAttendance(records.map { it.toEntity(isSynced = false) })
             
-            // Excellent Backend: Mark as unsynced locally for background worker
-            attendanceDao.insertAttendance(recordsWithSchoolId.map { it.toEntity(isSynced = false) })
+            // Try instant sync for each record (or add bulk endpoint to backend)
+            var allSuccess = true
+            records.forEach { record ->
+                val response = apiService.markAttendance(record)
+                if (response.success) {
+                    attendanceDao.markAsSynced(listOf(record.id))
+                } else {
+                    allSuccess = false
+                }
+            }
             
-            // Try instant sync
-            postgrest["attendance"].upsert(recordsWithSchoolId)
-            attendanceDao.markAsSynced(recordsWithSchoolId.map { it.id })
-            
-            Resource.Success(Unit)
+            if (allSuccess) Resource.Success(Unit) else Resource.Error("Some records failed to sync")
         } catch (e: Exception) {
-            // Fails silently - Worker will handle this later
+            // Worker will handle background sync
             Resource.Success(Unit) 
         }
     }
@@ -77,18 +75,14 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
 
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val remoteData = postgrest["attendance"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId)
-                        eq("student_id", studentId)
-                    }
-                }
-                .decodeList<AttendanceRecord>()
-            
-            attendanceDao.insertAttendance(remoteData.map { it.toEntity(isSynced = true) })
-            emit(Resource.Success(remoteData))
+            val response = apiService.getStudentAttendance(studentId)
+            if (response.success && response.data != null) {
+                val remoteData = response.data
+                attendanceDao.insertAttendance(remoteData.map { it.toEntity(isSynced = true) })
+                emit(Resource.Success(remoteData))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
             if (localData.isEmpty()) {
                 emit(Resource.Error(e.message ?: "An error occurred"))
@@ -96,4 +90,3 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 }
-

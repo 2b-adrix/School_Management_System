@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,8 +22,10 @@ import com.example.schoolmanagementsystem.frontend.ui.components.AppCard
 import com.example.schoolmanagementsystem.frontend.ui.components.LoadingScreen
 import com.example.schoolmanagementsystem.frontend.ui.components.SchoolTopAppBar
 import com.example.schoolmanagementsystem.frontend.ui.theme.spacing
+import com.lowagie.rups.model.BackgroundTask
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 @Composable
 fun AttendanceReportScreen(

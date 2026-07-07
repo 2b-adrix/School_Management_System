@@ -1,9 +1,6 @@
 package com.example.schoolmanagementsystem.backend.data.local.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.example.schoolmanagementsystem.backend.data.local.entity.ClassEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -15,7 +12,12 @@ interface ClassDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertClass(schoolClass: ClassEntity): Long
 
+    @Update
+    suspend fun updateClass(schoolClass: ClassEntity): Int
+
+    @Delete
+    suspend fun deleteClass(schoolClass: ClassEntity): Int
+
     @Query("SELECT * FROM classes WHERE id = :id")
     suspend fun getClassById(id: String): ClassEntity?
 }
-

@@ -5,12 +5,13 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "timetable")
 data class TimetableEntity(
-    @PrimaryKey
-    val id: String,
+    @PrimaryKey val id: String,
     val schoolId: String,
     val classId: String,
     val subjectId: String,
+    val subjectName: String,
     val teacherId: String,
+    val teacherName: String,
     val dayOfWeek: Int,
     val startTime: String,
     val endTime: String,

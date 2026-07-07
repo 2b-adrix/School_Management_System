@@ -2,32 +2,20 @@ package com.example.schoolmanagementsystem.backend.data.repository
 
 import com.example.schoolmanagementsystem.backend.domain.repository.StorageRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.storage.Storage
 import javax.inject.Inject
 
-class StorageRepositoryImpl @Inject constructor(
-    private val supabaseStorage: Storage
-) : StorageRepository {
+class StorageRepositoryImpl @Inject constructor() : StorageRepository {
 
     override suspend fun uploadProfileImage(
-        path: String,
-        imageBytes: ByteArray,
-        bucketName: String
+        bucketName: String,
+        bytes: ByteArray,
+        fileName: String
     ): Resource<String> {
-        return try {
-            val bucket = supabaseStorage.from(bucketName)
-            bucket.upload(path, imageBytes) {
-                upsert = true
-            }
-            Resource.Success(path)
-        } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to upload image")
-        }
+        // Placeholder until backend storage is implemented
+        return Resource.Success("https://via.placeholder.com/150")
     }
 
-    override fun getPublicUrl(path: String, bucketName: String): String {
-        val bucket = supabaseStorage.from(bucketName)
-        return bucket.publicUrl(path)
+    override fun getPublicUrl(bucketName: String, path: String): String {
+        return "https://via.placeholder.com/150"
     }
 }
-

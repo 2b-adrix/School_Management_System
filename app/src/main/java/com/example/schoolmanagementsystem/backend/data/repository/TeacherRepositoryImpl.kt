@@ -1,49 +1,67 @@
 package com.example.schoolmanagementsystem.backend.data.repository
 
+import com.example.schoolmanagementsystem.backend.data.local.dao.TeacherDao
+import com.example.schoolmanagementsystem.backend.data.local.entity.toDomain
+import com.example.schoolmanagementsystem.backend.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.Teacher
 import com.example.schoolmanagementsystem.backend.domain.repository.TeacherRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class TeacherRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
-    private val sessionManager: SessionManager
+    private val apiService: SikshaApiService,
+    private val sessionManager: SessionManager,
+    private val teacherDao: TeacherDao
 ) : TeacherRepository {
 
     override fun getAllTeachers(): Flow<Resource<List<Teacher>>> = flow {
-        emit(Resource.Loading())
+        // Emit local data immediately
+        val localData = teacherDao.getAllTeachers().first()
+        if (localData.isNotEmpty()) {
+            emit(Resource.Success(localData.map { it.toDomain() }))
+        } else {
+            emit(Resource.Loading())
+        }
+
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull()
-            val teachers = postgrest["teachers"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId ?: "")
-                    }
+            val response = apiService.getAllTeachers()
+            if (response.success && response.data != null) {
+                val remoteData = response.data
+                remoteData.forEach { teacher ->
+                    teacherDao.insertTeacher(teacher.toEntity())
                 }
-                .decodeList<Teacher>()
-            emit(Resource.Success(teachers))
+                emit(Resource.Success(remoteData))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An error occurred"))
+            if (localData.isEmpty()) {
+                emit(Resource.Error(e.message ?: "An error occurred"))
+            }
         }
     }.flowOn(Dispatchers.IO)
 
     override suspend fun getTeacherById(id: String): Resource<Teacher> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val teacher = postgrest["teachers"]
-                .select {
-                    filter {
-                        eq("id", id)
-                        eq("school_id", schoolId)
-                    }
-                }
-                .decodeSingle<Teacher>()
-            Resource.Success(teacher)
+            // Try local first
+            val localTeacher = teacherDao.getTeacherById(id)
+            if (localTeacher != null) {
+                return@withContext Resource.Success(localTeacher.toDomain())
+            }
+
+            val response = apiService.getTeacherById(id)
+            if (response.success && response.data != null) {
+                val teacher = response.data
+                teacherDao.insertTeacher(teacher.toEntity())
+                Resource.Success(teacher)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Teacher not found")
         }
@@ -51,10 +69,13 @@ class TeacherRepositoryImpl @Inject constructor(
 
     override suspend fun addTeacher(teacher: Teacher): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val teacherWithSchoolId = teacher.copy(schoolId = schoolId)
-            postgrest["teachers"].insert(teacherWithSchoolId)
-            Resource.Success(Unit)
+            val response = apiService.createTeacher(teacher)
+            if (response.success && response.data != null) {
+                teacherDao.insertTeacher(response.data.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to add teacher")
         }
@@ -62,14 +83,13 @@ class TeacherRepositoryImpl @Inject constructor(
 
     override suspend fun updateTeacher(teacher: Teacher): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["teachers"].update(teacher.copy(schoolId = schoolId)) {
-                filter {
-                    eq("id", teacher.id)
-                    eq("school_id", schoolId)
-                }
+            val response = apiService.updateTeacher(teacher.id, teacher)
+            if (response.success && response.data != null) {
+                teacherDao.updateTeacher(response.data.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to update teacher")
         }
@@ -77,17 +97,15 @@ class TeacherRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTeacher(teacher: Teacher): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["teachers"].delete {
-                filter {
-                    eq("id", teacher.id)
-                    eq("school_id", schoolId)
-                }
+            val response = apiService.deleteTeacher(teacher.id)
+            if (response.success) {
+                teacherDao.deleteTeacher(teacher.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to delete teacher")
         }
     }
 }
-

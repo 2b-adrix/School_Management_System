@@ -57,7 +57,9 @@ class AddTimetableEntryViewModel @Inject constructor(
                 dayOfWeek = dayOfWeek,
                 startTime = startTime,
                 endTime = endTime,
-                roomNumber = roomNumber
+                roomNumber = roomNumber,
+                subjectName = TODO(),
+                teacherName = TODO()
             )
 
             val result = repository.addTimetableEntry(entry)

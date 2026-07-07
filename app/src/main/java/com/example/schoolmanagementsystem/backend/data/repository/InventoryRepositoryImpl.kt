@@ -1,75 +1,70 @@
 package com.example.schoolmanagementsystem.backend.data.repository
 
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.InventoryItem
 import com.example.schoolmanagementsystem.backend.domain.repository.InventoryRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class InventoryRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
+    private val apiService: SikshaApiService,
     private val sessionManager: SessionManager
 ) : InventoryRepository {
 
     override fun getAllInventoryItems(): Flow<Resource<List<InventoryItem>>> = flow {
         emit(Resource.Loading())
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull()
-            val items = postgrest["inventory"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId ?: "")
-                    }
-                }
-                .decodeList<InventoryItem>()
-            emit(Resource.Success(items))
+            val response = apiService.getAllInventoryItems()
+            if (response.success && response.data != null) {
+                emit(Resource.Success(response.data))
+            } else {
+                emit(Resource.Error(response.message))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "An error occurred"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
-    override suspend fun addInventoryItem(item: InventoryItem): Resource<Unit> {
-        return try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["inventory"].insert(item.copy(schoolId = schoolId))
-            Resource.Success(Unit)
+    override suspend fun addInventoryItem(item: InventoryItem): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.addInventoryItem(item)
+            if (response.success) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to add item")
+            Resource.Error(e.message ?: "Failed to add inventory item")
         }
     }
 
-    override suspend fun updateInventoryItem(item: InventoryItem): Resource<Unit> {
-        return try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["inventory"].update(item.copy(schoolId = schoolId)) {
-                filter {
-                    eq("id", item.id)
-                    eq("school_id", schoolId)
-                }
+    override suspend fun updateInventoryItem(item: InventoryItem): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.updateInventoryItem(item.id, item)
+            if (response.success) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to update item")
+            Resource.Error(e.message ?: "Failed to update inventory item")
         }
     }
 
-    override suspend fun deleteInventoryItem(itemId: String): Resource<Unit> {
-        return try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            postgrest["inventory"].delete {
-                filter {
-                    eq("id", itemId)
-                    eq("school_id", schoolId)
-                }
+    override suspend fun deleteInventoryItem(id: String): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.deleteInventoryItem(id)
+            if (response.success) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to delete item")
+            Resource.Error(e.message ?: "Failed to delete inventory item")
         }
     }
 }
-

@@ -22,6 +22,8 @@ data class TimetableEntry(
     @SerialName("end_time")
     val endTime: String,   // e.g., 10:00 AM
     @SerialName("room_number")
-    val roomNumber: String? = null
+    val roomNumber: String? = null,
+    val subjectName: String,
+    val teacherName: String
 )
 

@@ -4,24 +4,24 @@ import com.example.schoolmanagementsystem.backend.data.local.dao.ClassDao
 import com.example.schoolmanagementsystem.backend.data.local.entity.toDomain
 import com.example.schoolmanagementsystem.backend.data.local.entity.toEntity
 import com.example.schoolmanagementsystem.backend.data.manager.SessionManager
+import com.example.schoolmanagementsystem.backend.data.remote.SikshaApiService
 import com.example.schoolmanagementsystem.backend.domain.model.SchoolClass
 import com.example.schoolmanagementsystem.backend.domain.repository.ClassRepository
 import com.example.schoolmanagementsystem.backend.domain.util.Resource
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ClassRepositoryImpl @Inject constructor(
-    private val postgrest: Postgrest,
+    private val apiService: SikshaApiService,
     private val sessionManager: SessionManager,
     private val classDao: ClassDao
 ) : ClassRepository {
 
     override fun getAllClasses(): Flow<Resource<List<SchoolClass>>> = flow {
-        // Excellent Backend: Emit local data immediately
-        val localClasses = classDao.getAllClasses().firstOrNull() ?: emptyList()
+        // Emit local data immediately on the IO dispatcher
+        val localClasses = classDao.getAllClasses().first()
         if (localClasses.isNotEmpty()) {
             emit(Resource.Success(localClasses.map { it.toDomain() }))
         } else {
@@ -29,21 +29,16 @@ class ClassRepositoryImpl @Inject constructor(
         }
 
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val remoteClasses = postgrest["classes"]
-                .select {
-                    filter {
-                        eq("school_id", schoolId)
-                    }
+            val response = apiService.getAllClasses()
+            if (response.success && response.data != null) {
+                val remoteClasses = response.data
+                remoteClasses.forEach { schoolClass ->
+                    classDao.insertClass(schoolClass.toEntity())
                 }
-                .decodeList<SchoolClass>()
-            
-            // Sync local DB
-            remoteClasses.forEach { schoolClass ->
-                classDao.insertClass(schoolClass.toEntity())
+                emit(Resource.Success(remoteClasses))
+            } else {
+                emit(Resource.Error(response.message))
             }
-            
-            emit(Resource.Success(remoteClasses))
         } catch (e: Exception) {
             if (localClasses.isEmpty()) {
                 emit(Resource.Error(e.message ?: "An error occurred"))
@@ -52,24 +47,21 @@ class ClassRepositoryImpl @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     override suspend fun getClassById(id: String): Resource<SchoolClass> = withContext(Dispatchers.IO) {
-        val localClass = classDao.getClassById(id)
-        if (localClass != null) {
-            return@withContext Resource.Success(localClass.toDomain())
-        }
-
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val schoolClass = postgrest["classes"]
-                .select {
-                    filter {
-                        eq("id", id)
-                        eq("school_id", schoolId)
-                    }
-                }
-                .decodeSingle<SchoolClass>()
-            
-            classDao.insertClass(schoolClass.toEntity())
-            Resource.Success(schoolClass)
+            // Try local first
+            val localClass = classDao.getClassById(id)
+            if (localClass != null) {
+                return@withContext Resource.Success(localClass.toDomain())
+            }
+
+            val response = apiService.getClassById(id)
+            if (response.success && response.data != null) {
+                val schoolClass = response.data
+                classDao.insertClass(schoolClass.toEntity())
+                Resource.Success(schoolClass)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Class not found")
         }
@@ -77,32 +69,27 @@ class ClassRepositoryImpl @Inject constructor(
 
     override suspend fun addClass(schoolClass: SchoolClass): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val classWithId = schoolClass.copy(schoolId = schoolId)
-            
-            classDao.insertClass(classWithId.toEntity())
-            
-            postgrest["classes"].insert(classWithId)
-            Resource.Success(Unit)
+            val response = apiService.createClass(schoolClass)
+            if (response.success && response.data != null) {
+                classDao.insertClass(response.data.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
+            }
         } catch (e: Exception) {
-            Resource.Success(Unit)
+            Resource.Error(e.message ?: "Failed to add class")
         }
     }
 
     override suspend fun updateClass(schoolClass: SchoolClass): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            val updatedClass = schoolClass.copy(schoolId = schoolId)
-            
-            classDao.insertClass(updatedClass.toEntity())
-            
-            postgrest["classes"].update(updatedClass) {
-                filter {
-                    eq("id", schoolClass.id)
-                    eq("school_id", schoolId)
-                }
+            val response = apiService.updateClass(schoolClass.id, schoolClass)
+            if (response.success && response.data != null) {
+                classDao.updateClass(response.data.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to update class")
         }
@@ -110,19 +97,15 @@ class ClassRepositoryImpl @Inject constructor(
 
     override suspend fun deleteClass(schoolClass: SchoolClass): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.schoolId.firstOrNull() ?: ""
-            
-            // Note: In a real app, delete locally too
-            postgrest["classes"].delete {
-                filter {
-                    eq("id", schoolClass.id)
-                    eq("school_id", schoolId)
-                }
+            val response = apiService.deleteClass(schoolClass.id)
+            if (response.success) {
+                classDao.deleteClass(schoolClass.toEntity())
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message)
             }
-            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to delete class")
         }
     }
 }
-
